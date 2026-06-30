@@ -21,6 +21,10 @@ export class AuthService {
   readonly user = this._user.asReadonly();
   /** True si hay sesión activa. */
   readonly isAuthenticated = computed(() => this._token() !== null);
+  /** Rol del usuario extraído del JWT. */
+  readonly role = computed(() => this.parseJwtClaim(this._token(), 'role') ?? 'VECINO');
+  /** Tenant al que pertenece el usuario (null = sin comunidad asignada). */
+  readonly tenantId = computed(() => this.parseJwtClaim(this._token(), 'tenantId'));
 
   /**
    * Intercambia el ID token de Google por la sesión del backend.
@@ -64,6 +68,16 @@ export class AuthService {
     if (!raw) return null;
     try {
       return JSON.parse(raw) as User;
+    } catch {
+      return null;
+    }
+  }
+
+  private parseJwtClaim(token: string | null, claim: string): string | null {
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload[claim] ?? null;
     } catch {
       return null;
     }

@@ -8,6 +8,7 @@ export interface Post {
   latitud: number | null;
   longitud: number | null;
   direccion: string | null;
+  estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
 }
 
 export interface PostRequest {

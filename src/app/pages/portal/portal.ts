@@ -69,7 +69,9 @@ const markerIcon = L.icon({
       <button class="nav-tab" [class.active]="activeTab()==='noticias'" (click)="setTab('noticias')">INICIO</button>
       <button class="nav-tab" [class.active]="activeTab()==='mapa'" (click)="setTab('mapa')">MAPA COMUNITARIO</button>
       <button class="nav-tab" [class.active]="activeTab()==='eventos'" (click)="setTab('eventos')">EVENTOS</button>
-      <button class="nav-tab" [class.active]="activeTab()==='admin'" (click)="setTab('admin')">ADMINISTRACIÓN</button>
+      @if (isAdmin()) {
+        <button class="nav-tab" [class.active]="activeTab()==='admin'" (click)="setTab('admin')">ADMINISTRACIÓN</button>
+      }
     </div>
   </nav>
 
@@ -163,6 +165,12 @@ const markerIcon = L.icon({
               <article class="news-card">
                 <div class="news-card-band" [style.background]="TIPO_COLORS[post.tipo] ?? '#6366f1'">
                   <span class="news-card-tipo">{{ TIPO_LABELS[post.tipo] ?? post.tipo }}</span>
+                  @if (post.estado === 'PENDIENTE') {
+                    <span class="badge-pendiente">En revisión</span>
+                  }
+                  @if (post.estado === 'RECHAZADO') {
+                    <span class="badge-rechazado">Rechazado</span>
+                  }
                 </div>
                 <div class="news-card-body">
                   <h3>{{ post.titulo }}</h3>
@@ -172,7 +180,7 @@ const markerIcon = L.icon({
                 <div class="news-card-footer">
                   <span class="card-meta">{{ post.createdAt | date:'dd/MM/yyyy' }}</span>
                   <div class="card-actions">
-                    @if (post.latitud) {
+                    @if (post.latitud && post.estado === 'APROBADO') {
                       <button class="btn-map-link" (click)="irAlMapa(post)">Ver en mapa</button>
                     }
                     <button class="btn-delete" (click)="deletePost(post.id)">✕</button>
@@ -320,20 +328,62 @@ const markerIcon = L.icon({
       <section class="hero hero-admin">
         <div class="hero-inner">
           <h1>Administración</h1>
-          <p>Gestión de vecinos, cuotas, organizaciones comunitarias y documentos digitales.</p>
+          <p>Panel de moderación y gestión de la comunidad {{ communityName }}.</p>
         </div>
       </section>
       <div class="content-area">
-        <div class="admin-grid">
-          @for (item of adminItems; track item.title) {
-            <div class="admin-card">
-              <div class="admin-icon">{{ item.icon }}</div>
-              <h3>{{ item.title }}</h3>
-              <p>{{ item.desc }}</p>
-              <span class="coming-soon">Próximamente</span>
+
+        <!-- Cola de moderación -->
+        <div class="admin-section">
+          <div class="admin-section-head">
+            <h2>Cola de moderación</h2>
+            <span class="count-badge">{{ postsPendientes().length }} pendiente{{ postsPendientes().length === 1 ? '' : 's' }}</span>
+          </div>
+          @if (postsPendientesLoading()) {
+            <p class="msg-muted">Cargando publicaciones pendientes…</p>
+          } @else if (postsPendientes().length === 0) {
+            <div class="empty-state">
+              <span>✅</span>
+              <p>No hay publicaciones pendientes de revisión.</p>
+            </div>
+          } @else {
+            <div class="moderation-list">
+              @for (post of postsPendientes(); track post.id) {
+                <div class="mod-item">
+                  <div class="mod-item-left">
+                    <span class="tipo-dot" [style.background]="TIPO_COLORS[post.tipo] ?? '#9ca3af'"></span>
+                    <div>
+                      <div class="mod-title">{{ post.titulo }}</div>
+                      <div class="mod-meta">{{ TIPO_LABELS[post.tipo] ?? post.tipo }} · {{ post.authorEmail }} · {{ post.createdAt | date:'dd/MM/yyyy HH:mm' }}</div>
+                      <div class="mod-contenido">{{ post.contenido }}</div>
+                      @if (post.direccion) { <div class="mod-dir">📍 {{ post.direccion }}</div> }
+                    </div>
+                  </div>
+                  <div class="mod-actions">
+                    <button class="btn-aprobar" (click)="aprobarPost(post.id)">✔ Aprobar</button>
+                    <button class="btn-rechazar" (click)="rechazarPost(post.id)">✕ Rechazar</button>
+                  </div>
+                </div>
+              }
             </div>
           }
         </div>
+
+        <!-- Módulos futuros -->
+        <div class="admin-section">
+          <div class="admin-section-head"><h2>Otros módulos</h2></div>
+          <div class="admin-grid">
+            @for (item of adminItems; track item.title) {
+              <div class="admin-card">
+                <div class="admin-icon">{{ item.icon }}</div>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.desc }}</p>
+                <span class="coming-soon">Próximamente</span>
+              </div>
+            }
+          </div>
+        </div>
+
       </div>
     }
 
@@ -477,6 +527,32 @@ const markerIcon = L.icon({
     .site-footer { background: #003087; color: rgba(255,255,255,0.7); padding: 1rem 2rem; margin-top: auto; }
     .site-footer-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; font-size: 0.78rem; }
 
+    /* ─── Estado badges en cards ────────────────────────── */
+    .badge-pendiente { font-size: 0.68rem; font-weight: 700; background: rgba(0,0,0,0.25); color: #fef9c3; padding: 2px 7px; border-radius: 3px; margin-left: auto; }
+    .badge-rechazado { font-size: 0.68rem; font-weight: 700; background: rgba(220,38,38,0.35); color: #fff; padding: 2px 7px; border-radius: 3px; margin-left: auto; }
+
+    /* ─── Admin sections ────────────────────────────────── */
+    .admin-section { margin-bottom: 2.5rem; }
+    .admin-section-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem; }
+    .admin-section-head h2 { margin: 0; font-size: 1rem; color: #1f2937; }
+
+    /* ─── Moderation list ───────────────────────────────── */
+    .moderation-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .mod-item { background: #fff; border-radius: 8px; padding: 1rem 1.25rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .mod-item-left { display: flex; gap: 0.75rem; flex: 1; min-width: 0; }
+    .mod-title { font-weight: 700; font-size: 0.92rem; color: #1f2937; margin-bottom: 2px; }
+    .mod-meta { font-size: 0.74rem; color: #9ca3af; margin-bottom: 4px; }
+    .mod-contenido { font-size: 0.84rem; color: #4b5563; }
+    .mod-dir { font-size: 0.76rem; color: #9ca3af; margin-top: 3px; }
+    .mod-actions { display: flex; flex-direction: column; gap: 0.4rem; flex-shrink: 0; }
+    .btn-aprobar { background: #059669; color: #fff; border: none; border-radius: 4px; padding: 6px 14px; cursor: pointer; font-size: 0.82rem; font-weight: 600; white-space: nowrap; }
+    .btn-aprobar:hover { background: #047857; }
+    .btn-rechazar { background: #fff; color: #dc2626; border: 1px solid #fca5a5; border-radius: 4px; padding: 6px 14px; cursor: pointer; font-size: 0.82rem; font-weight: 600; white-space: nowrap; }
+    .btn-rechazar:hover { background: #fef2f2; }
+    .empty-state { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 2rem; text-align: center; color: #059669; }
+    .empty-state span { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+    .empty-state p { margin: 0; font-size: 0.9rem; }
+
     /* ─── Misc ──────────────────────────────────────────── */
     .msg-muted { color: #9ca3af; font-size: 0.88rem; }
     .msg-ok { color: #059669; font-size: 0.78rem; margin: 4px 0 0; }
@@ -492,6 +568,13 @@ export class Portal implements OnInit, AfterViewChecked, OnDestroy {
   protected readonly TIPO_COLORS = TIPO_COLORS;
   protected readonly TIPO_LABELS = TIPO_LABELS;
   protected readonly communityName = environment.communityName;
+  protected readonly isAdmin = () => {
+    const r = this.auth.role();
+    return r === 'COMMUNITY_ADMIN' || r === 'PLATFORM_ADMIN';
+  };
+
+  postsPendientes = signal<Post[]>([]);
+  postsPendientesLoading = signal(false);
 
   activeTab = signal<Tab>('noticias');
   showPostForm = signal(false);
@@ -563,11 +646,17 @@ export class Portal implements OnInit, AfterViewChecked, OnDestroy {
     { icon: '📄', title: 'Certificados', desc: 'Emisión de certificados de residencia en PDF.' },
   ];
 
-  postsConUbicacion = () => this.posts().filter(p => p.latitud != null && p.longitud != null);
+  postsConUbicacion = () => this.posts().filter(p => p.latitud != null && p.longitud != null && p.estado === 'APROBADO');
   postsFiltrados = () => { const f = this.filtroActivo(); return f === 'TODOS' ? this.posts() : this.posts().filter(p => p.tipo === f); };
   postsFiltradosMapa = () => { const f = this.mapaFiltro(); return f === 'TODOS' ? this.postsConUbicacion() : this.postsConUbicacion().filter(p => p.tipo === f); };
 
   ngOnInit(): void { this.loadPosts(); this.loadEvents(); }
+
+  setTab(tab: Tab): void {
+    this.activeTab.set(tab);
+    if (tab !== 'mapa') this.mapReady = false;
+    if (tab === 'admin' && this.isAdmin()) this.loadPostsPendientes();
+  }
 
   ngAfterViewChecked(): void {
     if (this.activeTab() === 'mapa' && this.mapContainer && !this.mapReady) this.initMap();
@@ -576,7 +665,6 @@ export class Portal implements OnInit, AfterViewChecked, OnDestroy {
 
   ngOnDestroy(): void { this.map?.remove(); this.miniMap?.remove(); }
 
-  setTab(tab: Tab): void { this.activeTab.set(tab); if (tab !== 'mapa') this.mapReady = false; }
 
   togglePostForm(): void {
     this.showPostForm.update(v => !v);
@@ -598,6 +686,33 @@ export class Portal implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   deletePost(id: string): void { this.svc.deletePost(id).subscribe({ next: () => { this.posts.update(p => p.filter(x => x.id !== id)); this.refreshMapMarkers(); } }); }
+
+  private loadPostsPendientes(): void {
+    this.postsPendientesLoading.set(true);
+    this.svc.getPostsPendientes().subscribe({
+      next: d => { this.postsPendientes.set(d); this.postsPendientesLoading.set(false); },
+      error: () => this.postsPendientesLoading.set(false),
+    });
+  }
+
+  aprobarPost(id: string): void {
+    this.svc.aprobarPost(id).subscribe({
+      next: updated => {
+        this.postsPendientes.update(p => p.filter(x => x.id !== id));
+        this.posts.update(p => p.map(x => x.id === id ? updated : x));
+        this.refreshMapMarkers();
+      }
+    });
+  }
+
+  rechazarPost(id: string): void {
+    this.svc.rechazarPost(id).subscribe({
+      next: updated => {
+        this.postsPendientes.update(p => p.filter(x => x.id !== id));
+        this.posts.update(p => p.map(x => x.id === id ? updated : x));
+      }
+    });
+  }
 
   irAlMapa(post: Post): void { this.setTab('mapa'); setTimeout(() => this.seleccionarPost(post), 400); }
 

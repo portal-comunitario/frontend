@@ -4,6 +4,8 @@ export interface User {
   email: string;
   name: string;
   picture?: string;
+  role?: string;
+  tenantId?: string | null;
 }
 
 /** Respuesta de POST /auth/google. */

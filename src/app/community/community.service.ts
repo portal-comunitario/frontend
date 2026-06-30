@@ -20,6 +20,18 @@ export class CommunityService {
     return this.http.post<Post>(`${this.base}/posts`, request);
   }
 
+  getPostsPendientes(): Observable<Post[]> {
+    return this.http.get<Post[]>(`${this.base}/posts/pendientes`);
+  }
+
+  aprobarPost(id: string): Observable<Post> {
+    return this.http.put<Post>(`${this.base}/posts/${id}/aprobar`, {});
+  }
+
+  rechazarPost(id: string): Observable<Post> {
+    return this.http.put<Post>(`${this.base}/posts/${id}/rechazar`, {});
+  }
+
   deletePost(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/posts/${id}`);
   }
