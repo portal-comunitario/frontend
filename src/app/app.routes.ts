@@ -3,25 +3,19 @@ import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: '', redirectTo: 'portal', pathMatch: 'full' },
   {
     path: 'login',
     loadComponent: () => import('./pages/login/login').then((m) => m.Login),
   },
   {
-    path: 'dashboard',
+    path: 'portal',
     canActivate: [authGuard],
-    loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
+    loadComponent: () => import('./pages/portal/portal').then((m) => m.Portal),
   },
-  {
-    path: 'posts',
-    canActivate: [authGuard],
-    loadComponent: () => import('./pages/posts/posts').then((m) => m.Posts),
-  },
-  {
-    path: 'events',
-    canActivate: [authGuard],
-    loadComponent: () => import('./pages/events/events').then((m) => m.Events),
-  },
-  { path: '**', redirectTo: 'dashboard' },
+  // Rutas legacy redirigen al portal
+  { path: 'dashboard', redirectTo: 'portal' },
+  { path: 'posts', redirectTo: 'portal' },
+  { path: 'events', redirectTo: 'portal' },
+  { path: '**', redirectTo: 'portal' },
 ];

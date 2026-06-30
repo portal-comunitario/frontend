@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
-import { Event, EventRequest, Post, PostRequest } from './community.models';
+import { CommunityEvent, EventRequest, Post, PostRequest } from './community.models';
 
 @Injectable({ providedIn: 'root' })
 export class CommunityService {
@@ -26,12 +26,12 @@ export class CommunityService {
 
   // ── Events ─────────────────────────────────────────────
 
-  getEvents(): Observable<Event[]> {
-    return this.http.get<Event[]>(`${this.base}/events`);
+  getEvents(): Observable<CommunityEvent[]> {
+    return this.http.get<CommunityEvent[]>(`${this.base}/events`);
   }
 
-  createEvent(request: EventRequest): Observable<Event> {
-    return this.http.post<Event>(`${this.base}/events`, request);
+  createEvent(request: EventRequest): Observable<CommunityEvent> {
+    return this.http.post<CommunityEvent>(`${this.base}/events`, request);
   }
 
   deleteEvent(id: string): Observable<void> {

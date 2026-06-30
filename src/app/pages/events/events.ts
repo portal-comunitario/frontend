@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { CommunityService } from '../../community/community.service';
-import { Event, EventRequest } from '../../community/community.models';
+import { CommunityEvent as Event, EventRequest } from '../../community/community.models';
 
 @Component({
   selector: 'app-events',

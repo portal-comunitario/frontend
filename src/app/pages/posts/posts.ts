@@ -110,7 +110,7 @@ export class Posts implements OnInit {
   saving = signal(false);
   error = signal<string | null>(null);
 
-  form: PostRequest = { titulo: '', contenido: '', tipo: 'ANUNCIO' };
+  form: PostRequest = { titulo: '', contenido: '', tipo: 'ANUNCIO', latitud: null, longitud: null, direccion: null };
 
   ngOnInit(): void {
     this.loadPosts();
@@ -130,7 +130,7 @@ export class Posts implements OnInit {
     this.svc.createPost(this.form).subscribe({
       next: (post) => {
         this.posts.update(prev => [post, ...prev]);
-        this.form = { titulo: '', contenido: '', tipo: 'ANUNCIO' };
+        this.form = { titulo: '', contenido: '', tipo: 'ANUNCIO', latitud: null, longitud: null, direccion: null };
         this.saving.set(false);
       },
       error: () => {
