@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
-import { AuthResponse, GoogleLoginRequest, User } from './models/auth.models';
+import { AuthResponse, GoogleLoginRequest, Profile, ProfileUpdate, User } from './models/auth.models';
 
 const TOKEN_KEY = 'auth.token';
 const USER_KEY = 'auth.user';
@@ -37,13 +37,59 @@ export class AuthService {
       .pipe(tap((res) => this.persistSession(res)));
   }
 
+  /** Registro con correo/contraseña. POST /auth/register -> { token, user } */
+  register(name: string, email: string, password: string): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponse>(`${environment.authApiUrl}/register`, { name, email, password })
+      .pipe(tap((res) => this.persistSession(res)));
+  }
+
+  /** Login con correo/contraseña. POST /auth/login -> { token, user } */
+  login(email: string, password: string): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponse>(`${environment.authApiUrl}/login`, { email, password })
+      .pipe(tap((res) => this.persistSession(res)));
+  }
+
+  /** Solicita enlace de recuperación. POST /auth/forgot -> { message, resetLink? } */
+  forgotPassword(email: string): Observable<{ message: string; resetLink?: string }> {
+    return this.http.post<{ message: string; resetLink?: string }>(
+      `${environment.authApiUrl}/forgot`,
+      { email },
+    );
+  }
+
+  /** Aplica nueva contraseña con el token. POST /auth/reset -> { message } */
+  resetPassword(token: string, password: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${environment.authApiUrl}/reset`, { token, password });
+  }
+
+  /** Perfil completo del usuario autenticado. GET /auth/me */
+  getProfile(): Observable<Profile> {
+    return this.http.get<Profile>(`${environment.authApiUrl}/me`);
+  }
+
+  /** Actualiza el perfil. PUT /auth/me. Refresca el nombre en la sesión local. */
+  updateProfile(update: ProfileUpdate): Observable<Profile> {
+    return this.http.put<Profile>(`${environment.authApiUrl}/me`, update).pipe(
+      tap((p) => {
+        const current = this._user();
+        if (current) {
+          const merged = { ...current, name: p.name };
+          this._user.set(merged);
+          localStorage.setItem(USER_KEY, JSON.stringify(merged));
+        }
+      }),
+    );
+  }
+
   /** Borra la sesión local y redirige al login. */
   logout(): void {
     this._token.set(null);
     this._user.set(null);
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
-    window.google?.accounts.id.disableAutoSelect();
+    try { (window as any).google?.accounts?.id?.disableAutoSelect(); } catch { /* Google no cargado o sin sesión previa */ }
     void this.router.navigate(['/login']);
   }
 

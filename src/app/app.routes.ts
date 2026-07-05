@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { authGuard } from './auth/auth.guard';
+import { adminGuard } from './auth/admin.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'portal', pathMatch: 'full' },
@@ -12,10 +13,24 @@ export const routes: Routes = [
     path: 'portal',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/portal/portal').then((m) => m.Portal),
+    children: [
+      { path: '', loadComponent: () => import('./features/inicio/inicio').then((m) => m.Inicio) },
+      { path: 'tablon', loadComponent: () => import('./features/tablon/tablon').then((m) => m.Tablon) },
+      { path: 'mapa', loadComponent: () => import('./features/mapa/mapa').then((m) => m.Mapa) },
+      { path: 'eventos', loadComponent: () => import('./features/eventos/eventos').then((m) => m.Eventos) },
+      { path: 'agrupaciones', loadComponent: () => import('./features/agrupaciones/agrupaciones').then((m) => m.Agrupaciones) },
+      { path: 'calendario', loadComponent: () => import('./features/calendario/calendario').then((m) => m.Calendario) },
+      { path: 'admin', canActivate: [adminGuard], loadComponent: () => import('./features/admin/admin').then((m) => m.Admin) },
+      { path: 'perfil', loadComponent: () => import('./features/perfil/perfil').then((m) => m.Perfil) },
+    ],
+  },
+  {
+    path: 'reset',
+    loadComponent: () => import('./pages/reset/reset').then((m) => m.Reset),
   },
   // Rutas legacy redirigen al portal
   { path: 'dashboard', redirectTo: 'portal' },
-  { path: 'posts', redirectTo: 'portal' },
-  { path: 'events', redirectTo: 'portal' },
+  { path: 'posts', redirectTo: 'portal/tablon' },
+  { path: 'events', redirectTo: 'portal/eventos' },
   { path: '**', redirectTo: 'portal' },
 ];

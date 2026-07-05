@@ -18,3 +18,25 @@ export interface AuthResponse {
 export interface GoogleLoginRequest {
   idToken: string;
 }
+
+/** Perfil completo del vecino (GET /auth/me). */
+export interface Profile {
+  email: string;
+  name: string;
+  role: string;
+  tenantId: string | null;
+  telefono: string | null;
+  rut: string | null;
+  direccion: string | null;
+  inicioResidencia: string | null;
+  estadoValidacion: string;
+}
+
+/** Campos editables del perfil (PUT /auth/me). */
+export interface ProfileUpdate {
+  name: string;
+  telefono: string | null;
+  rut: string | null;
+  direccion: string | null;
+  inicioResidencia: string | null;
+}
