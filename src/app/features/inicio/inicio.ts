@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, formatDate } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { AuthService } from '../../auth/auth.service';
@@ -30,7 +30,7 @@ const CAT_LABELS: Record<string, string> = { NOTICIA: 'Noticia', AVISO: 'Aviso',
 <div class="content-area">
   @if (isAdmin() && showForm()) {
     <div class="form-panel">
-      <h3>Nuevo comunicado</h3>
+      <h3>{{ editingId() ? 'Editar comunicado' : 'Nuevo comunicado' }}</h3>
       <form (ngSubmit)="submit()" #f="ngForm">
         <div class="form-row">
           <div class="field">
@@ -57,9 +57,9 @@ const CAT_LABELS: Record<string, string> = { NOTICIA: 'Noticia', AVISO: 'Aviso',
         </div>
         @if (error()) { <p class="msg-error">{{ error() }}</p> }
         <div class="form-actions">
-          <button type="button" class="btn-ghost" (click)="showForm.set(false)">Cancelar</button>
+          <button type="button" class="btn-ghost" (click)="cancelar()">Cancelar</button>
           <button type="submit" class="btn-primary" [disabled]="saving() || !f.valid">
-            {{ saving() ? 'Publicando…' : 'Publicar' }}
+            {{ saving() ? 'Guardando…' : (editingId() ? 'Guardar cambios' : 'Publicar') }}
           </button>
         </div>
       </form>
@@ -71,7 +71,7 @@ const CAT_LABELS: Record<string, string> = { NOTICIA: 'Noticia', AVISO: 'Aviso',
     <div class="destacados">
       @for (ev of proximosEventos(); track ev.id) {
         <div class="destacado-card">
-          <div class="fecha">📅 {{ ev.fechaInicio | date:'dd/MM HH:mm' }}</div>
+          <div class="fecha">📅 {{ fechaLarga(ev.fechaInicio) }}</div>
           <div class="titulo">{{ ev.titulo }}</div>
         </div>
       }
@@ -89,6 +89,12 @@ const CAT_LABELS: Record<string, string> = { NOTICIA: 'Noticia', AVISO: 'Aviso',
         <article class="news-card">
           <div class="news-card-band" [style.background]="CAT_COLORS[c.categoria] ?? '#6366f1'">
             <span class="news-card-tipo">{{ CAT_LABELS[c.categoria] ?? c.categoria }}</span>
+            @if (isAdmin()) {
+              <div class="band-actions">
+                <button class="band-btn" title="Editar" (click)="editar(c)">✏️</button>
+                <button class="band-btn" title="Eliminar" (click)="delete(c.id)">✕</button>
+              </div>
+            }
           </div>
           <div class="news-card-body">
             <h3>{{ c.titulo }}</h3>
@@ -96,7 +102,6 @@ const CAT_LABELS: Record<string, string> = { NOTICIA: 'Noticia', AVISO: 'Aviso',
           </div>
           <div class="news-card-footer">
             <span class="card-meta">{{ c.createdAt | date:'dd/MM/yyyy' }}</span>
-            @if (isAdmin()) { <button class="btn-delete" (click)="delete(c.id)">✕</button> }
           </div>
         </article>
       }
@@ -104,6 +109,12 @@ const CAT_LABELS: Record<string, string> = { NOTICIA: 'Noticia', AVISO: 'Aviso',
   }
 </div>
   `,
+  styles: [`
+    .band-actions { margin-left: auto; display: flex; gap: 4px; }
+    .band-btn { background: rgba(255,255,255,0.25); border: none; color: #fff; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+    .band-btn:hover { background: rgba(255,255,255,0.45); }
+    .news-card-body p { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  `],
 })
 export class Inicio implements OnInit {
   private readonly svc = inject(ComunicadoService);
@@ -119,11 +130,28 @@ export class Inicio implements OnInit {
 
   comunicados = signal<Comunicado[]>([]);
   proximosEventos = signal<Evento[]>([]);
+
+  /** Fecha en texto: "Domingo 12, Julio 10:00 AM". */
+  fechaLarga(iso: string): string {
+    const d = new Date(iso);
+    const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+    const dia = cap(formatDate(d, 'EEEE', 'es-CL'));
+    const num = formatDate(d, 'd', 'es-CL');
+    const mes = cap(formatDate(d, 'MMMM', 'es-CL'));
+    const hora = formatDate(d, 'h:mm', 'es-CL');
+    const ampm = d.getHours() < 12 ? 'AM' : 'PM';
+    return `${dia} ${num}, ${mes} ${hora} ${ampm}`;
+  }
   loading = signal(true);
   showForm = signal(false);
+  editingId = signal<string | null>(null);
   saving = signal(false);
   error = signal<string | null>(null);
-  form: ComunicadoRequest = { titulo: '', contenido: '', categoria: 'NOTICIA', imagenUrl: null };
+  form: ComunicadoRequest = this.emptyForm();
+
+  private emptyForm(): ComunicadoRequest {
+    return { titulo: '', contenido: '', categoria: 'NOTICIA', imagenUrl: null };
+  }
 
   ngOnInit(): void {
     this.load();
@@ -145,18 +173,42 @@ export class Inicio implements OnInit {
     });
   }
 
-  toggleForm(): void { this.showForm.update((v) => !v); }
+  toggleForm(): void {
+    if (this.showForm()) { this.cancelar(); return; }
+    this.editingId.set(null);
+    this.form = this.emptyForm();
+    this.showForm.set(true);
+  }
+
+  cancelar(): void {
+    this.showForm.set(false);
+    this.editingId.set(null);
+    this.form = this.emptyForm();
+    this.error.set(null);
+  }
+
+  editar(c: Comunicado): void {
+    this.editingId.set(c.id);
+    this.form = { titulo: c.titulo, contenido: c.contenido, categoria: c.categoria, imagenUrl: c.imagenUrl ?? null };
+    this.showForm.set(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   submit(): void {
     this.saving.set(true); this.error.set(null);
-    this.svc.create(this.form).subscribe({
-      next: (c) => {
-        this.comunicados.update((prev) => [c, ...prev]);
-        this.form = { titulo: '', contenido: '', categoria: 'NOTICIA', imagenUrl: null };
-        this.showForm.set(false); this.saving.set(false);
-      },
-      error: () => { this.error.set('Error al publicar. Intenta nuevamente.'); this.saving.set(false); },
-    });
+    const id = this.editingId();
+    const done = () => { this.form = this.emptyForm(); this.showForm.set(false); this.editingId.set(null); this.saving.set(false); };
+    if (id) {
+      this.svc.update(id, this.form).subscribe({
+        next: (c) => { this.comunicados.update((p) => p.map((x) => x.id === c.id ? c : x)); done(); },
+        error: () => { this.error.set('Error al guardar los cambios.'); this.saving.set(false); },
+      });
+    } else {
+      this.svc.create(this.form).subscribe({
+        next: (c) => { this.comunicados.update((prev) => [c, ...prev]); done(); },
+        error: () => { this.error.set('Error al publicar. Intenta nuevamente.'); this.saving.set(false); },
+      });
+    }
   }
 
   delete(id: string): void {

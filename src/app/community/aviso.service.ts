@@ -22,6 +22,10 @@ export class AvisoService {
     return this.http.post<Aviso>(this.base, request);
   }
 
+  update(id: string, request: AvisoRequest): Observable<Aviso> {
+    return this.http.put<Aviso>(`${this.base}/${id}`, request);
+  }
+
   aprobar(id: string): Observable<Aviso> {
     return this.http.put<Aviso>(`${this.base}/${id}/aprobar`, {});
   }

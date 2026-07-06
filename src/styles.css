@@ -115,6 +115,8 @@ textarea { resize: vertical; }
 .list-item.active { background: #eff6ff; border-left: 3px solid #003087; }
 .list-item-top { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
 .tipo-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.tipo-star { font-size: 0.85rem; line-height: 1; flex-shrink: 0; color: #f59e0b; }
+.leg-nota { color: #9ca3af; font-size: 0.66rem; }
 .list-item-tipo { font-size: 0.7rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; }
 .list-item-title { font-size: 0.86rem; font-weight: 600; color: #1f2937; }
 .list-item-dir { font-size: 0.74rem; color: #9ca3af; }

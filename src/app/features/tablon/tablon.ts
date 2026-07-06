@@ -20,7 +20,7 @@ declare const google: any;
   template: `
 <section class="hero hero-tablon">
   <div class="hero-inner">
-    <h1>Tablón Vecinal</h1>
+    <h1>Avisos Vecinales</h1>
     <p>Servicios, compra y venta, arriendos y objetos perdidos entre vecinos. Tu publicación pasa por revisión antes de aparecer.</p>
     <button class="btn-hero" (click)="toggleForm()">{{ showForm() ? '✕ Cancelar' : '+ Nueva publicación' }}</button>
   </div>
@@ -29,7 +29,7 @@ declare const google: any;
 <div class="content-area">
   @if (showForm()) {
     <div class="form-panel">
-      <h3>Nueva publicación</h3>
+      <h3>{{ editingId() ? 'Editar publicación' : 'Nueva publicación' }}</h3>
       <form (ngSubmit)="submit()" #f="ngForm">
         <div class="form-row">
           <div class="field">
@@ -77,9 +77,9 @@ declare const google: any;
         <div #miniMapContainer class="mini-map" [class.visible]="!!form.latitud"></div>
         @if (error()) { <p class="msg-error">{{ error() }}</p> }
         <div class="form-actions">
-          <button type="button" class="btn-ghost" (click)="showForm.set(false)">Cancelar</button>
+          <button type="button" class="btn-ghost" (click)="cancelar()">Cancelar</button>
           <button type="submit" class="btn-primary" [disabled]="saving() || !f.valid">
-            {{ saving() ? 'Publicando…' : 'Publicar' }}
+            {{ saving() ? 'Guardando…' : (editingId() ? 'Guardar cambios' : 'Publicar') }}
           </button>
         </div>
       </form>
@@ -104,9 +104,18 @@ declare const google: any;
         <article class="news-card">
           <div class="news-card-band" [style.background]="AVISO_COLORS[a.categoria] ?? '#6366f1'">
             <span class="news-card-tipo">{{ AVISO_LABELS[a.categoria] ?? a.categoria }}</span>
-            @if (a.resuelto) { <span class="badge-resuelto">Resuelto</span> }
-            @else if (a.estado === 'PENDIENTE') { <span class="badge-pendiente">En revisión</span> }
-            @else if (a.estado === 'RECHAZADO') { <span class="badge-rechazado">Rechazado</span> }
+            <div class="band-right">
+              @if (a.resuelto) { <span class="badge-resuelto">Resuelto</span> }
+              @else if (a.estado === 'PENDIENTE') { <span class="badge-pendiente">En revisión</span> }
+              @else if (a.estado === 'RECHAZADO') { <span class="badge-rechazado">Rechazado</span> }
+              @if (puedeGestionar(a)) {
+                <div class="band-actions">
+                  @if (!a.resuelto) { <button class="band-btn" title="Marcar resuelto" (click)="marcarResuelto(a.id)">✓</button> }
+                  <button class="band-btn" title="Editar" (click)="editar(a)">✏️</button>
+                  <button class="band-btn" title="Eliminar" (click)="delete(a.id)">✕</button>
+                </div>
+              }
+            </div>
           </div>
           <div class="news-card-body">
             <h3>{{ a.titulo }}</h3>
@@ -117,12 +126,6 @@ declare const google: any;
           </div>
           <div class="news-card-footer">
             <span class="card-meta">{{ a.createdAt | date:'dd/MM/yyyy' }}</span>
-            <div class="card-actions">
-              @if (puedeGestionar(a) && !a.resuelto) {
-                <button class="btn-resolver" (click)="marcarResuelto(a.id)">✓ Resuelto</button>
-              }
-              @if (puedeGestionar(a)) { <button class="btn-delete" (click)="delete(a.id)">✕</button> }
-            </div>
           </div>
         </article>
       }
@@ -130,6 +133,13 @@ declare const google: any;
   }
 </div>
   `,
+  styles: [`
+    .band-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+    .news-card-band .badge-resuelto, .news-card-band .badge-pendiente, .news-card-band .badge-rechazado { margin-left: 0; }
+    .band-actions { display: flex; gap: 4px; }
+    .band-btn { background: rgba(255,255,255,0.25); border: none; color: #fff; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+    .band-btn:hover { background: rgba(255,255,255,0.45); }
+  `],
 })
 export class Tablon implements OnInit, AfterViewChecked {
   @ViewChild('miniMapContainer') miniMapContainer!: ElementRef<HTMLDivElement>;
@@ -146,6 +156,7 @@ export class Tablon implements OnInit, AfterViewChecked {
   avisos = signal<Aviso[]>([]);
   loading = signal(true);
   showForm = signal(false);
+  editingId = signal<string | null>(null);
   saving = signal(false);
   error = signal<string | null>(null);
   filtroActivo = signal<'TODOS' | Aviso['categoria']>('TODOS');
@@ -191,8 +202,35 @@ export class Tablon implements OnInit, AfterViewChecked {
   }
 
   toggleForm(): void {
-    this.showForm.update((v) => !v);
-    if (!this.showForm()) { this.resetMiniMap(); this.autocompleteReady = false; }
+    if (this.showForm()) { this.cancelar(); return; }
+    this.editingId.set(null);
+    this.form = this.emptyForm();
+    this.busquedaDireccion = '';
+    this.showForm.set(true);
+  }
+
+  cancelar(): void {
+    this.showForm.set(false);
+    this.editingId.set(null);
+    this.form = this.emptyForm();
+    this.busquedaDireccion = '';
+    this.resetMiniMap();
+    this.autocompleteReady = false;
+    this.error.set(null);
+  }
+
+  editar(a: Aviso): void {
+    this.editingId.set(a.id);
+    this.form = {
+      titulo: a.titulo, descripcion: a.descripcion, categoria: a.categoria,
+      latitud: a.latitud ?? null, longitud: a.longitud ?? null, direccion: a.direccion ?? null,
+      precio: a.precio ?? null, contacto: a.contacto ?? null,
+    };
+    this.busquedaDireccion = a.direccion ?? '';
+    this.miniMapReady = false;
+    this.autocompleteReady = false;
+    this.showForm.set(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   puedeGestionar(a: Aviso): boolean {
@@ -203,16 +241,24 @@ export class Tablon implements OnInit, AfterViewChecked {
 
   submit(): void {
     this.saving.set(true); this.error.set(null);
-    this.svc.create(this.form).subscribe({
-      next: (a) => {
-        this.avisos.update((prev) => [a, ...prev]);
-        this.form = this.emptyForm();
-        this.busquedaDireccion = '';
-        this.resetMiniMap();
-        this.showForm.set(false); this.saving.set(false);
-      },
-      error: () => { this.error.set('Error al publicar. Intenta nuevamente.'); this.saving.set(false); },
-    });
+    const id = this.editingId();
+    const done = () => {
+      this.form = this.emptyForm();
+      this.busquedaDireccion = '';
+      this.resetMiniMap();
+      this.showForm.set(false); this.editingId.set(null); this.saving.set(false);
+    };
+    if (id) {
+      this.svc.update(id, this.form).subscribe({
+        next: (a) => { this.avisos.update((p) => p.map((x) => x.id === a.id ? a : x)); done(); },
+        error: () => { this.error.set('Error al guardar los cambios.'); this.saving.set(false); },
+      });
+    } else {
+      this.svc.create(this.form).subscribe({
+        next: (a) => { this.avisos.update((prev) => [a, ...prev]); done(); },
+        error: () => { this.error.set('Error al publicar. Intenta nuevamente.'); this.saving.set(false); },
+      });
+    }
   }
 
   marcarResuelto(id: string): void {

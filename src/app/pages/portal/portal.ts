@@ -38,11 +38,12 @@ import { environment } from '../../../environments/environment';
   <nav class="site-nav">
     <div class="site-nav-inner">
       <a class="nav-tab" routerLink="/portal" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">INICIO</a>
-      <a class="nav-tab" routerLink="/portal/tablon" routerLinkActive="active">TABLÓN</a>
+      <a class="nav-tab" routerLink="/portal/tablon" routerLinkActive="active">AVISOS</a>
       <a class="nav-tab" routerLink="/portal/mapa" routerLinkActive="active">MAPA</a>
       <a class="nav-tab" routerLink="/portal/eventos" routerLinkActive="active">EVENTOS</a>
       <a class="nav-tab" routerLink="/portal/agrupaciones" routerLinkActive="active">AGRUPACIONES</a>
       <a class="nav-tab" routerLink="/portal/calendario" routerLinkActive="active">CALENDARIO</a>
+      <a class="nav-tab" routerLink="/portal/tramites" routerLinkActive="active">TRÁMITES</a>
       @if (isAdmin()) {
         <a class="nav-tab" routerLink="/portal/admin" routerLinkActive="active">ADMINISTRACIÓN</a>
       }
