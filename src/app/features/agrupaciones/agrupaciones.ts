@@ -7,6 +7,7 @@ import { AgrupacionService } from '../../community/agrupacion.service';
 import { EventoService } from '../../community/evento.service';
 import { Agrupacion, AgrupacionRequest } from '../../community/agrupacion.models';
 import { Evento, EventoRequest } from '../../community/evento.models';
+import { RouterLink } from '@angular/router';
 
 const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
@@ -14,7 +15,7 @@ const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado
 @Component({
   selector: 'app-agrupaciones',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, RouterLink],
   template: `
 <section class="hero" style="background: linear-gradient(135deg,#0f766e 0%,#0d9488 60%,#14b8a6 100%)">
   <div class="hero-inner">
@@ -123,7 +124,12 @@ const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado
                 @if (sociosList().length === 0) {
                   <p class="msg-muted" style="font-size:.8rem">Aún no hay socios inscritos.</p>
                 } @else {
-                  @for (s of sociosList(); track s) { <div class="socio-item">{{ s }}</div> }
+                  @for (s of sociosList(); track s) {
+                    <div class="socio-item">
+                      <span class="socio-nombre">{{ nombreDe(s) }}</span>
+                      @if (vecinoNombre()[s]) { <span class="socio-mail">{{ s }}</span> }
+                    </div>
+                  }
                 }
               </div>
             }
@@ -144,6 +150,12 @@ const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado
           <div class="agr-cta">
             @if (a.inscrito) {
               <button class="btn-inscrito" (click)="salir(a)">✔ Inscrito · Salir</button>
+              @if (!isAdmin()) {
+                <div class="mis-toggles">
+                  <button [routerLink]="['/portal/agrupaciones', a.id, 'cuotas']">Mis cuotas</button>
+                  <button [routerLink]="['/portal/agrupaciones', a.id, 'asistencia']">Mi asistencia</button>
+                </div>
+              }
             } @else {
               <button class="btn-inscribir" (click)="inscribirse(a)">Inscribirme</button>
             }
@@ -151,11 +163,20 @@ const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado
 
           @if (isAdmin()) {
             <div class="agr-admin">
-              <span class="agr-admin-label">Gestión</span>
-              <button (click)="editar(a)">Editar</button>
-              <button (click)="verSocios(a)">{{ sociosVisible() === a.id ? 'Ocultar socios' : 'Ver socios' }}</button>
-              <button (click)="toggleActividad(a.id)">+ Actividad</button>
-              <button class="danger" (click)="eliminar(a)">Eliminar</button>
+              <button class="gestion-toggle" [class.abierto]="menuAbierto() === a.id" (click)="toggleMenu(a.id)">
+                <span>⚙ Gestión</span>
+                <span class="chevron">{{ menuAbierto() === a.id ? '▲' : '▾' }}</span>
+              </button>
+              @if (menuAbierto() === a.id) {
+                <div class="gestion-menu">
+                  <button (click)="editar(a); menuAbierto.set(null)"><span class="gi">✏️</span> Editar</button>
+                  <button (click)="verSocios(a)"><span class="gi">👥</span> {{ sociosVisible() === a.id ? 'Ocultar socios' : 'Ver socios' }}</button>
+                  <button (click)="toggleActividad(a.id)"><span class="gi">📅</span> Actividad</button>
+                  <button [routerLink]="['/portal/agrupaciones', a.id, 'cuotas']"><span class="gi">💰</span> Cuotas</button>
+                  <button [routerLink]="['/portal/agrupaciones', a.id, 'asistencia']"><span class="gi">📋</span> Asistencia</button>
+                  <button class="danger" (click)="eliminar(a); menuAbierto.set(null)"><span class="gi">🗑</span> Eliminar</button>
+                </div>
+              }
             </div>
           }
         </article>
@@ -166,10 +187,11 @@ const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado
   `,
   styles: [`
     .form-sub { font-size: 0.78rem; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.04em; margin: 0.75rem 0 0.5rem; border-top: 1px solid #f3f4f6; padding-top: 0.75rem; }
-    .agr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 1.25rem; }
-    .agr-card { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; flex-direction: column; }
-    .agr-head { padding: 0.85rem 1rem; display: flex; align-items: center; justify-content: space-between; color: #fff; background: #0d9488; gap: 8px; }
-    .agr-nombre { font-size: 0.98rem; font-weight: 800; }
+    .agr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
+    .agr-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.07); display: flex; flex-direction: column; transition: box-shadow 0.15s, transform 0.15s; }
+    .agr-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: translateY(-2px); }
+    .agr-head { padding: 0.75rem 1rem; min-height: 60px; display: flex; align-items: center; justify-content: space-between; color: #fff; background: #0d9488; gap: 8px; }
+    .agr-nombre { font-size: 0.97rem; font-weight: 800; }
     .agr-socios { font-size: 0.72rem; background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 999px; font-weight: 700; white-space: nowrap; }
     .agr-body { padding: 1rem; flex: 1; }
     .agr-desc { color: #6b7280; font-size: 0.86rem; margin: 0 0 0.5rem; }
@@ -185,20 +207,29 @@ const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado
     .act-form { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 6px; background: #f9fafb; padding: 0.75rem; border-radius: 6px; }
     .socios-box { border-top: 1px solid #f3f4f6; padding-top: 0.75rem; margin-top: 0.5rem; }
     .socios-box strong { font-size: 0.8rem; color: #374151; display: block; margin-bottom: 0.4rem; }
-    .socio-item { font-size: 0.8rem; color: #4b5563; padding: 2px 0; }
+    .socio-item { font-size: 0.8rem; color: #1f2937; padding: 3px 0; display: flex; flex-direction: column; }
+    .socio-nombre { font-weight: 600; }
+    .socio-mail { font-size: 0.72rem; color: #9ca3af; }
     /* CTA principal (vecino) */
     .agr-cta { padding: 0.85rem 1rem; border-top: 1px solid #f3f4f6; }
     .btn-inscribir { width: 100%; background: #003087; color: #fff; border: none; border-radius: 6px; padding: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
     .btn-inscribir:hover { background: #00256b; }
     .btn-inscrito { width: 100%; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; border-radius: 6px; padding: 10px; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
     .btn-inscrito:hover { background: #d1fae5; }
+    .mis-toggles { display: flex; gap: 8px; margin-top: 8px; }
+    .mis-toggles button { flex: 1; background: #f0fdfa; color: #0f766e; border: 1px solid #ccfbf1; border-radius: 6px; padding: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+    .mis-toggles button:hover { background: #ccfbf1; }
     /* Barra de gestión (admin) */
-    .agr-admin { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; background: #f8fafc; border-top: 1px solid #eef2f7; padding: 0.5rem 0.75rem; }
-    .agr-admin-label { font-size: 0.68rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px; }
-    .agr-admin button { background: none; border: none; color: #475569; font-size: 0.78rem; padding: 4px 8px; border-radius: 5px; cursor: pointer; }
-    .agr-admin button:hover { background: #eef2f7; color: #1f2937; }
-    .agr-admin button.danger { color: #dc2626; margin-left: auto; }
-    .agr-admin button.danger:hover { background: #fef2f2; }
+    .agr-admin { background: #f8fafc; border-top: 1px solid #eef2f7; padding: 0.5rem 0.75rem; }
+    .gestion-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; background: #fff; border: 1px solid #e2e8f0; color: #475569; font-size: 0.82rem; font-weight: 600; padding: 7px 12px; border-radius: 7px; cursor: pointer; }
+    .gestion-toggle:hover, .gestion-toggle.abierto { background: #eef2f7; color: #1f2937; }
+    .gestion-toggle .chevron { color: #94a3b8; font-size: 0.7rem; }
+    .gestion-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+    .gestion-menu button { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #e2e8f0; color: #374151; font-size: 0.8rem; padding: 8px 10px; border-radius: 7px; cursor: pointer; text-align: left; }
+    .gestion-menu button:hover { background: #f1f5f9; border-color: #cbd5e1; }
+    .gestion-menu .gi { font-size: 0.95rem; }
+    .gestion-menu button.danger { color: #dc2626; border-color: #fecaca; }
+    .gestion-menu button.danger:hover { background: #fef2f2; }
   `],
 })
 export class Agrupaciones implements OnInit {
@@ -220,6 +251,8 @@ export class Agrupaciones implements OnInit {
   actividadForm = signal<string | null>(null);
   sociosVisible = signal<string | null>(null);
   sociosList = signal<string[]>([]);
+  vecinoNombre = signal<Record<string, string>>({});
+  menuAbierto = signal<string | null>(null);
 
   form: AgrupacionRequest = this.emptyForm();
   actTitulo = '';
@@ -229,6 +262,23 @@ export class Agrupaciones implements OnInit {
   ngOnInit(): void {
     this.cargar();
     this.eventoSvc.getAll().subscribe({ next: (e) => this.eventos.set(e) });
+    if (this.isAdmin()) {
+      this.auth.getVecinos().subscribe({
+        next: (vs) => {
+          const m: Record<string, string> = {};
+          vs.forEach((v) => { if (v.email) m[v.email] = v.name; });
+          this.vecinoNombre.set(m);
+        },
+      });
+    }
+  }
+
+  nombreDe(email: string): string {
+    return this.vecinoNombre()[email] ?? email;
+  }
+
+  toggleMenu(id: string): void {
+    this.menuAbierto.set(this.menuAbierto() === id ? null : id);
   }
 
   private emptyForm(): AgrupacionRequest {
