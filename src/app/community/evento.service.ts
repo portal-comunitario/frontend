@@ -18,6 +18,10 @@ export class EventoService {
     return this.http.post<Evento>(this.base, request);
   }
 
+  update(id: string, request: EventoRequest): Observable<Evento> {
+    return this.http.put<Evento>(`${this.base}/${id}`, request);
+  }
+
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
   }

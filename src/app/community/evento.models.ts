@@ -1,5 +1,8 @@
 export type EventoCategoria = 'GENERAL' | 'CLUB_ADULTO_MAYOR' | 'CENTRO_DE_MADRES' | 'TALLER' | 'REUNION';
 
+/** Frecuencia de recurrencia estilo calendario. */
+export type Frecuencia = 'DIARIA' | 'SEMANAL' | 'MENSUAL' | 'ANUAL';
+
 export interface Evento {
   id: string;
   titulo: string;
@@ -8,8 +11,17 @@ export interface Evento {
   fechaFin: string | null;
   ubicacion: string | null;
   categoria: EventoCategoria;
+  subcategoria: string | null;
+  color: string | null;
   agrupacionId: string | null;
+  latitud: number | null;
+  longitud: number | null;
+  recurrente: boolean;
+  frecuencia: Frecuencia | null;
+  intervalo: number | null;
+  recurrenciaFin: string | null;
   authorEmail: string;
+  authorNombre: string | null;
   createdAt: string;
 }
 
@@ -19,6 +31,14 @@ export interface EventoRequest {
   fechaInicio: string;
   fechaFin: string | null;
   ubicacion: string | null;
-  categoria: string;
+  categoria?: string;
+  subcategoria?: string | null;
+  color?: string | null;
   agrupacionId?: string | null;
+  latitud?: number | null;
+  longitud?: number | null;
+  recurrente?: boolean;
+  frecuencia?: string | null;
+  intervalo?: number | null;
+  recurrenciaFin?: string | null;
 }

@@ -1,11 +1,11 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
 
 import { AuthService } from '../../auth/auth.service';
 import { EventoService } from '../../community/evento.service';
 import { AgrupacionService } from '../../community/agrupacion.service';
 import { Evento } from '../../community/evento.models';
 import { Agrupacion } from '../../community/agrupacion.models';
+import { expandirEventos } from '../../core/recurrence.util';
 
 interface CalItem {
   kind: 'evento' | 'reunion';
@@ -29,7 +29,7 @@ interface Celda {
 @Component({
   selector: 'app-calendario',
   standalone: true,
-  imports: [DatePipe],
+  imports: [],
   template: `
 <section class="hero" style="background: linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 60%,#2563eb 100%)">
   <div class="hero-inner">
@@ -141,29 +141,37 @@ export class Calendario implements OnInit {
     const offset = (primero.getDay() + 6) % 7;
     const inicio = new Date(y, m, 1 - offset);
     const hoyStr = this.ymd(new Date());
+    // Ocurrencias de eventos (incluye recurrentes) expandidas sobre la ventana visible (42 días).
+    const fin = new Date(inicio); fin.setDate(inicio.getDate() + 41); fin.setHours(23, 59, 59, 999);
+    const eventMap = this.eventosPorDia(inicio, fin);
     const celdas: Celda[] = [];
     for (let i = 0; i < 42; i++) {
       const fecha = new Date(inicio);
       fecha.setDate(inicio.getDate() + i);
       celdas.push({
         fecha, dia: fecha.getDate(), delMes: fecha.getMonth() === m,
-        hoy: this.ymd(fecha) === hoyStr, items: this.itemsDe(fecha),
+        hoy: this.ymd(fecha) === hoyStr, items: this.itemsDe(fecha, eventMap),
       });
     }
     return celdas;
   }
 
-  private itemsDe(fecha: Date): CalItem[] {
-    const fStr = this.ymd(fecha);
-    const items: CalItem[] = [];
+  private eventosPorDia(desde: Date, hasta: Date): Map<string, CalItem[]> {
+    const map = new Map<string, CalItem[]>();
+    for (const o of expandirEventos(this.eventos(), desde, hasta)) {
+      const k = this.ymd(o.fechaInicio);
+      const item: CalItem = {
+        kind: 'evento', key: 'e-' + o.key, titulo: o.evento.titulo,
+        hora: this.hhmm(o.fechaInicio), ubicacion: o.evento.ubicacion,
+      };
+      (map.get(k) ?? map.set(k, []).get(k)!).push(item);
+    }
+    return map;
+  }
 
-    // Eventos reales
-    this.eventos()
-      .filter((e) => this.ymd(new Date(e.fechaInicio)) === fStr)
-      .forEach((e) => items.push({
-        kind: 'evento', key: 'e-' + e.id, titulo: e.titulo,
-        hora: this.hhmm(new Date(e.fechaInicio)), ubicacion: e.ubicacion,
-      }));
+  private itemsDe(fecha: Date, eventMap: Map<string, CalItem[]>): CalItem[] {
+    const fStr = this.ymd(fecha);
+    const items: CalItem[] = [...(eventMap.get(fStr) ?? [])];
 
     // Reuniones periódicas de agrupaciones
     const fIso = this.ymdIso(fecha);

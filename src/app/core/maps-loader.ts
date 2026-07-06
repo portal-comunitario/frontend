@@ -13,13 +13,22 @@ export class MapsLoader {
     if (this.promise) return this.promise;
 
     this.promise = new Promise<void>((resolve, reject) => {
-      const w = window as unknown as { google?: { maps?: unknown } };
-      if (w.google?.maps) { resolve(); return; }
+      const ready = () => !!(window as any).google?.maps?.Map;
+
+      // Con `loading=async`, el onload del script puede dispararse antes de que la
+      // clase Map esté disponible. Esperamos activamente a que exista de verdad.
+      const esperarClases = (intentos = 0) => {
+        if (ready()) { resolve(); return; }
+        if (intentos > 100) { reject(new Error('Google Maps no terminó de cargar')); return; }
+        setTimeout(() => esperarClases(intentos + 1), 50);
+      };
+
+      if (ready()) { resolve(); return; }
 
       const existing = document.getElementById('gmaps-sdk') as HTMLScriptElement | null;
       if (existing) {
-        existing.addEventListener('load', () => resolve());
         existing.addEventListener('error', () => reject(new Error('No se pudo cargar Google Maps')));
+        esperarClases();
         return;
       }
 
@@ -31,7 +40,7 @@ export class MapsLoader {
       script.src =
         `https://maps.googleapis.com/maps/api/js?key=${key}` +
         `&libraries=places&language=es-419&region=CL&loading=async`;
-      script.onload = () => resolve();
+      script.onload = () => esperarClases();
       script.onerror = () => reject(new Error('No se pudo cargar Google Maps'));
       document.head.appendChild(script);
     });

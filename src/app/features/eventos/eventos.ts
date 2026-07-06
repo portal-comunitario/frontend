@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -6,71 +6,118 @@ import { AuthService } from '../../auth/auth.service';
 import { EventoService } from '../../community/evento.service';
 import { AgrupacionService } from '../../community/agrupacion.service';
 import { Evento, EventoRequest } from '../../community/evento.models';
+import { etiquetaRecurrencia } from '../../core/recurrence.util';
+import { MapPicker } from './map-picker';
 
-const CAT_LABELS: Record<string, string> = {
-  GENERAL: 'General', CLUB_ADULTO_MAYOR: 'Club Adulto Mayor',
-  CENTRO_DE_MADRES: 'Centro de Madres', TALLER: 'Taller', REUNION: 'Reunión',
-};
+interface ColorPin { hex: string; label: string; }
 
 /** Sección Eventos — actividades con fecha (dominio C). Crea/borra solo dirigentes. */
 @Component({
   selector: 'app-eventos',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, MapPicker],
   template: `
 <section class="hero hero-eventos">
   <div class="hero-inner">
     <h1>Eventos y Actividades</h1>
     <p>Talleres, reuniones y actividades de la comunidad.</p>
     @if (isAdmin()) {
-      <button class="btn-hero" (click)="showForm.set(!showForm())">{{ showForm() ? '✕ Cancelar' : '+ Nuevo evento' }}</button>
+      <button class="btn-hero" (click)="toggleForm()">{{ showForm() ? '✕ Cancelar' : '+ Nuevo evento' }}</button>
     }
   </div>
 </section>
 <div class="content-area">
   @if (isAdmin() && showForm()) {
     <div class="form-panel">
-      <h3>Nuevo evento</h3>
+      <h3>{{ editingId() ? 'Editar evento' : 'Nuevo evento' }}</h3>
       <form (ngSubmit)="submit()" #f="ngForm">
         <div class="form-row">
           <div class="field">
             <label>Título *</label>
-            <input name="titulo" [(ngModel)]="form.titulo" required placeholder="Ej: Taller de zumba" />
+            <input name="titulo" [(ngModel)]="form.titulo" required placeholder="Ej: Feria dominical" />
           </div>
           <div class="field field-sm">
-            <label>Categoría</label>
-            <select name="categoria" [(ngModel)]="form.categoria">
-              <option value="GENERAL">General</option>
-              <option value="CLUB_ADULTO_MAYOR">Club Adulto Mayor</option>
-              <option value="CENTRO_DE_MADRES">Centro de Madres</option>
-              <option value="TALLER">Taller</option>
-              <option value="REUNION">Reunión</option>
-            </select>
+            <label>Tipo <span class="opt">(opcional)</span></label>
+            <input name="subcategoria" [(ngModel)]="form.subcategoria" placeholder="Ej: Feria, Deporte, Cultura" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Color del pin en el mapa <span class="opt">(opcional)</span></label>
+          <div class="color-picker">
+            @for (c of coloresPin; track c.hex) {
+              <button type="button" class="swatch" [class.sel]="(form.color ?? '') === c.hex"
+                      [style.background]="c.hex || '#f59e0b'" [title]="c.label"
+                      (click)="form.color = c.hex">
+                @if ((form.color ?? '') === c.hex) { <span class="tick">✓</span> }
+              </button>
+            }
+            <span class="color-nota">{{ colorLabel() }}</span>
           </div>
         </div>
         <div class="field">
           <label>Descripción</label>
           <textarea name="descripcion" [(ngModel)]="form.descripcion" rows="2"></textarea>
         </div>
-        <div class="form-row">
-          <div class="field">
-            <label>Fecha inicio *</label>
-            <input name="fi" type="datetime-local" [(ngModel)]="fechaInicioStr" required />
+        <div class="form-row fecha-row">
+          <div class="field field-sm">
+            <label>Fecha *</label>
+            <input name="fecha" type="date" [(ngModel)]="fecha" required />
           </div>
-          <div class="field">
-            <label>Fecha fin</label>
-            <input name="ff" type="datetime-local" [(ngModel)]="fechaFinStr" />
+          <div class="field field-sm">
+            <label>Hora inicio *</label>
+            <input name="hi" type="time" [(ngModel)]="horaInicio" required />
+          </div>
+          <div class="field field-sm">
+            <label>Hora término <span class="opt">(opcional)</span></label>
+            <input name="hf" type="time" [(ngModel)]="horaFin" />
+          </div>
+          <div class="field rec-field">
+            <label class="spacer">&nbsp;</label>
+            <label class="rec-check">
+              <input type="checkbox" name="rec" [(ngModel)]="form.recurrente" />
+              <span>Evento recurrente</span>
+            </label>
+          </div>
+        </div>
+        @if (form.recurrente) {
+          <div class="form-row">
+            <div class="field field-sm">
+              <label>Se repite</label>
+              <select name="frec" [(ngModel)]="form.frecuencia">
+                <option value="DIARIA">Cada día</option>
+                <option value="SEMANAL">Cada semana</option>
+                <option value="MENSUAL">Cada mes</option>
+                <option value="ANUAL">Cada año</option>
+              </select>
+            </div>
+            <div class="field field-sm">
+              <label>Cada</label>
+              <input name="int" type="number" min="1" [(ngModel)]="form.intervalo" />
+            </div>
+            <div class="field">
+              <label>Repetir hasta <span class="opt">(opcional)</span></label>
+              <input name="recfin" type="date" [(ngModel)]="form.recurrenciaFin" />
+            </div>
+          </div>
+          <p class="rec-nota">Se repetirá {{ frecuenciaLabel() }} a partir de la fecha elegida, en el mismo horario.</p>
+        }
+        <div class="field">
+          <label>Ubicación</label>
+          <div class="ubic-row">
+            <input name="ubicacion" [(ngModel)]="form.ubicacion" placeholder="Ej: Av. Las Parcelas 123"
+                   (keydown.enter)="$event.preventDefault(); buscarEnMapa()" />
+            <button type="button" class="btn-buscar" (click)="buscarEnMapa()">🔍 Buscar en el mapa</button>
           </div>
         </div>
         <div class="field">
-          <label>Ubicación</label>
-          <input name="ubicacion" [(ngModel)]="form.ubicacion" placeholder="Ej: Sede vecinal" />
+          <label>Punto en el mapa <span class="opt">(opcional — aparecerá en el Mapa comunitario)</span></label>
+          <app-map-picker #picker [lat]="form.latitud ?? null" [lng]="form.longitud ?? null" (picked)="onPicked($event)" />
         </div>
         @if (error()) { <p class="msg-error">{{ error() }}</p> }
         <div class="form-actions">
-          <button type="button" class="btn-ghost" (click)="showForm.set(false)">Cancelar</button>
+          <button type="button" class="btn-ghost" (click)="cancelar()">Cancelar</button>
           <button type="submit" class="btn-primary" [disabled]="saving() || !f.valid">
-            {{ saving() ? 'Guardando…' : 'Crear evento' }}
+            {{ saving() ? 'Guardando…' : (editingId() ? 'Guardar cambios' : 'Crear evento') }}
           </button>
         </div>
       </form>
@@ -82,24 +129,44 @@ const CAT_LABELS: Record<string, string> = {
     <div class="cards-grid">
       @for (ev of eventos(); track ev.id) {
         <article class="news-card">
-          <div class="news-card-band" style="background:#10b981">
-            <span class="news-card-tipo">{{ CAT_LABELS[ev.categoria] ?? ev.categoria }}</span>
+          <div class="news-card-band" [style.background]="ev.color || '#f59e0b'">
+            <span class="news-card-tipo">{{ ev.subcategoria || 'Evento' }}</span>
+            @if (isAdmin()) {
+              <div class="band-actions">
+                <button class="band-btn" title="Editar" (click)="editar(ev)">✏️</button>
+                <button class="band-btn" title="Eliminar" (click)="delete(ev.id)">✕</button>
+              </div>
+            }
           </div>
           <div class="news-card-body">
-            <h3>{{ ev.titulo }}</h3>
-            @if (ev.descripcion) { <p>{{ ev.descripcion }}</p> }
-            @if (ev.agrupacionId && agrupacionNombre()[ev.agrupacionId]) {
-              <span class="tag-agrupacion">👥 {{ agrupacionNombre()[ev.agrupacionId] }}</span>
-            }
-            <div class="event-meta">
-              <span>📅 {{ ev.fechaInicio | date:'dd/MM/yyyy HH:mm' }}</span>
-              @if (ev.fechaFin) { <span>→ {{ ev.fechaFin | date:'HH:mm' }}</span> }
-              @if (ev.ubicacion) { <span>📍 {{ ev.ubicacion }}</span> }
+            <div class="ev-top">
+              <h3>{{ ev.titulo }}</h3>
+              @if (ev.descripcion) { <p class="ev-desc">{{ ev.descripcion }}</p> }
+            </div>
+
+            <div class="ev-detalles">
+              <div class="ev-info">
+                <div class="ev-row">
+                  <span class="ev-ico">📅</span>
+                  <span>{{ ev.fechaInicio | date:'dd/MM/yyyy HH:mm' }}@if (ev.fechaFin) {<span class="ev-dim"> – {{ ev.fechaFin | date:'HH:mm' }}</span>}</span>
+                </div>
+                @if (ev.ubicacion) {
+                  <div class="ev-row"><span class="ev-ico">📍</span><span>{{ ev.ubicacion }}</span></div>
+                }
+                @if (ev.agrupacionId && agrupacionNombre()[ev.agrupacionId]) {
+                  <div class="ev-row"><span class="ev-ico">👥</span><span>{{ agrupacionNombre()[ev.agrupacionId] }}</span></div>
+                }
+              </div>
+              @if (ev.recurrente || ev.latitud != null) {
+                <div class="ev-badges">
+                  @if (ev.recurrente) { <span class="badge badge-rec">🔁 {{ etiqueta(ev) }}</span> }
+                  @if (ev.latitud != null) { <span class="badge badge-mapa">🗺️ En el mapa</span> }
+                </div>
+              }
             </div>
           </div>
           <div class="news-card-footer">
-            <span class="card-meta">{{ ev.authorEmail }}</span>
-            @if (isAdmin()) { <button class="btn-delete" (click)="delete(ev.id)">✕</button> }
+            <span class="card-meta">Publicado por {{ ev.authorNombre || ev.authorEmail }}</span>
           </div>
         </article>
       }
@@ -107,13 +174,57 @@ const CAT_LABELS: Record<string, string> = {
   }
 </div>
   `,
+  styles: [`
+    .opt { font-weight: 400; color: #9ca3af; font-size: 0.8em; }
+    .rec-field { display: flex; flex-direction: column; }
+    .rec-field .spacer { visibility: hidden; }
+    .rec-check { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; font-size: 0.78rem; color: #4b5563; cursor: pointer; white-space: nowrap; }
+    .rec-check input { width: auto; margin: 0; }
+    .rec-nota { font-size: 0.74rem; color: #6b7280; margin: 2px 0 0; }
+    .ubic-row { display: flex; gap: 8px; }
+    .ubic-row input { flex: 1; }
+    .btn-buscar { white-space: nowrap; background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; border-radius: 6px; padding: 0 12px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+    .btn-buscar:hover { background: #e0e7ff; }
+    .color-picker { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #e5e7eb; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+    .swatch.sel { border-color: #1f2937; }
+    .swatch .tick { color: #fff; font-size: 0.8rem; font-weight: 700; text-shadow: 0 0 2px rgba(0,0,0,0.4); }
+    .color-nota { font-size: 0.76rem; color: #6b7280; margin-left: 4px; }
+    .band-actions { margin-left: auto; display: flex; gap: 4px; }
+    .band-btn { background: rgba(255,255,255,0.25); border: none; color: #fff; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+    .band-btn:hover { background: rgba(255,255,255,0.45); }
+    .news-card-body { display: flex; flex-direction: column; }
+    .ev-top { flex: 1 1 auto; }
+    .ev-desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0; }
+    .ev-detalles { border-top: 1px solid #f3f4f6; margin-top: 0.75rem; padding-top: 0.7rem; }
+    .ev-info { display: flex; flex-direction: column; gap: 5px; }
+    .ev-row { display: flex; align-items: flex-start; gap: 7px; font-size: 0.8rem; color: #4b5563; }
+    .ev-ico { width: 16px; flex-shrink: 0; text-align: center; }
+    .ev-dim { color: #9ca3af; }
+    .ev-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 0.6rem; }
+    .badge { font-size: 0.72rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; }
+    .badge-rec { background: #f5f3ff; color: #7c3aed; }
+    .badge-mapa { background: #f0fdfa; color: #0d9488; }
+  `],
 })
 export class Eventos implements OnInit {
   private readonly svc = inject(EventoService);
   private readonly agrupacionSvc = inject(AgrupacionService);
   private readonly auth = inject(AuthService);
 
-  protected readonly CAT_LABELS = CAT_LABELS;
+  protected readonly coloresPin: ColorPin[] = [
+    { hex: '', label: 'Estándar (ámbar)' },
+    { hex: '#dc2626', label: 'Rojo' },
+    { hex: '#f97316', label: 'Naranja' },
+    { hex: '#16a34a', label: 'Verde' },
+    { hex: '#2563eb', label: 'Azul' },
+    { hex: '#7c3aed', label: 'Morado' },
+  ];
+
+  colorLabel(): string {
+    return this.coloresPin.find((c) => c.hex === (this.form.color ?? ''))?.label ?? 'Estándar (ámbar)';
+  }
+
   protected readonly isAdmin = () => {
     const r = this.auth.role();
     return r === 'COMMUNITY_ADMIN' || r === 'PLATFORM_ADMIN';
@@ -123,11 +234,13 @@ export class Eventos implements OnInit {
   agrupacionNombre = signal<Record<string, string>>({});
   loading = signal(true);
   showForm = signal(false);
+  editingId = signal<string | null>(null);
   saving = signal(false);
   error = signal<string | null>(null);
   form: EventoRequest = this.emptyForm();
-  fechaInicioStr = '';
-  fechaFinStr = '';
+  fecha = '';
+  horaInicio = '';
+  horaFin = '';
 
   ngOnInit(): void {
     this.load();
@@ -141,7 +254,64 @@ export class Eventos implements OnInit {
   }
 
   private emptyForm(): EventoRequest {
-    return { titulo: '', descripcion: '', fechaInicio: '', fechaFin: null, ubicacion: null, categoria: 'GENERAL' };
+    return {
+      titulo: '', descripcion: '', fechaInicio: '', fechaFin: null, ubicacion: null,
+      categoria: 'GENERAL', subcategoria: null, color: '',
+      latitud: null, longitud: null, recurrente: false, frecuencia: 'SEMANAL', intervalo: 1, recurrenciaFin: null,
+    };
+  }
+
+  @ViewChild('picker') picker?: MapPicker;
+
+  onPicked(p: { lat: number | null; lng: number | null }): void {
+    this.form.latitud = p.lat;
+    this.form.longitud = p.lng;
+  }
+
+  buscarEnMapa(): void {
+    this.picker?.buscarDireccion(this.form.ubicacion ?? '');
+  }
+
+  toggleForm(): void {
+    if (this.showForm()) { this.cancelar(); return; }
+    this.editingId.set(null);
+    this.form = this.emptyForm(); this.fecha = ''; this.horaInicio = ''; this.horaFin = '';
+    this.showForm.set(true);
+  }
+
+  cancelar(): void {
+    this.showForm.set(false);
+    this.editingId.set(null);
+    this.form = this.emptyForm(); this.fecha = ''; this.horaInicio = ''; this.horaFin = '';
+    this.error.set(null);
+  }
+
+  editar(ev: Evento): void {
+    this.editingId.set(ev.id);
+    const ini = new Date(ev.fechaInicio);
+    const fin = ev.fechaFin ? new Date(ev.fechaFin) : null;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    this.fecha = `${ini.getFullYear()}-${pad(ini.getMonth() + 1)}-${pad(ini.getDate())}`;
+    this.horaInicio = `${pad(ini.getHours())}:${pad(ini.getMinutes())}`;
+    this.horaFin = fin ? `${pad(fin.getHours())}:${pad(fin.getMinutes())}` : '';
+    this.form = {
+      titulo: ev.titulo, descripcion: ev.descripcion, fechaInicio: ev.fechaInicio, fechaFin: ev.fechaFin,
+      ubicacion: ev.ubicacion, categoria: ev.categoria, subcategoria: ev.subcategoria, color: ev.color ?? '',
+      agrupacionId: ev.agrupacionId, latitud: ev.latitud, longitud: ev.longitud,
+      recurrente: ev.recurrente, frecuencia: ev.frecuencia ?? 'SEMANAL', intervalo: ev.intervalo ?? 1, recurrenciaFin: ev.recurrenciaFin,
+    };
+    this.showForm.set(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  etiqueta(ev: Evento): string { return etiquetaRecurrencia(ev); }
+
+  frecuenciaLabel(): string {
+    const n = this.form.intervalo ?? 1;
+    const f = this.form.frecuencia ?? 'SEMANAL';
+    const unidad: Record<string, string> = { DIARIA: 'día', SEMANAL: 'semana', MENSUAL: 'mes', ANUAL: 'año' };
+    const plural: Record<string, string> = { DIARIA: 'días', SEMANAL: 'semanas', MENSUAL: 'meses', ANUAL: 'años' };
+    return n === 1 ? `cada ${unidad[f]}` : `cada ${n} ${plural[f]}`;
   }
 
   private load(): void {
@@ -154,14 +324,32 @@ export class Eventos implements OnInit {
 
   submit(): void {
     this.saving.set(true); this.error.set(null);
-    this.svc.create({ ...this.form, fechaInicio: this.fechaInicioStr, fechaFin: this.fechaFinStr || null }).subscribe({
-      next: (ev) => {
-        this.eventos.update((p) => [ev, ...p]);
-        this.form = this.emptyForm(); this.fechaInicioStr = ''; this.fechaFinStr = '';
-        this.showForm.set(false); this.saving.set(false);
-      },
-      error: () => { this.error.set('Error al crear el evento.'); this.saving.set(false); },
-    });
+    const rec = !!this.form.recurrente;
+    const payload: EventoRequest = {
+      ...this.form,
+      fechaInicio: `${this.fecha}T${this.horaInicio}`,
+      fechaFin: this.horaFin ? `${this.fecha}T${this.horaFin}` : null,
+      recurrente: rec,
+      frecuencia: rec ? (this.form.frecuencia || 'SEMANAL') : null,
+      intervalo: rec ? (this.form.intervalo && this.form.intervalo > 0 ? this.form.intervalo : 1) : null,
+      recurrenciaFin: rec ? (this.form.recurrenciaFin || null) : null,
+    };
+    const id = this.editingId();
+    const done = () => {
+      this.form = this.emptyForm(); this.fecha = ''; this.horaInicio = ''; this.horaFin = '';
+      this.showForm.set(false); this.editingId.set(null); this.saving.set(false);
+    };
+    if (id) {
+      this.svc.update(id, payload).subscribe({
+        next: (ev) => { this.eventos.update((p) => p.map((e) => e.id === ev.id ? ev : e)); done(); },
+        error: () => { this.error.set('Error al guardar los cambios.'); this.saving.set(false); },
+      });
+    } else {
+      this.svc.create(payload).subscribe({
+        next: (ev) => { this.eventos.update((p) => [ev, ...p]); done(); },
+        error: () => { this.error.set('Error al crear el evento.'); this.saving.set(false); },
+      });
+    }
   }
 
   delete(id: string): void {
