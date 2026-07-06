@@ -30,11 +30,23 @@ export interface Profile {
   direccion: string | null;
   inicioResidencia: string | null;
   estadoValidacion: string;
+  notificacionesActivas: boolean;
 }
 
 /** Campos editables del perfil (PUT /auth/me). */
 export interface ProfileUpdate {
   name: string;
+  telefono: string | null;
+  notificacionesActivas: boolean;
+}
+
+/** Vecino para la gestión/validación por el dirigente. */
+export interface Vecino {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  estadoValidacion: string;
   telefono: string | null;
   rut: string | null;
   direccion: string | null;

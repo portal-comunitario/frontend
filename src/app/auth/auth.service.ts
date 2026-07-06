@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
-import { AuthResponse, GoogleLoginRequest, Profile, ProfileUpdate, User } from './models/auth.models';
+import { AuthResponse, GoogleLoginRequest, Profile, ProfileUpdate, User, Vecino } from './models/auth.models';
 
 const TOKEN_KEY = 'auth.token';
 const USER_KEY = 'auth.user';
@@ -81,6 +81,21 @@ export class AuthService {
         }
       }),
     );
+  }
+
+  /** Lista de vecinos para gestión (dirigente). GET /auth/vecinos */
+  getVecinos(): Observable<Vecino[]> {
+    return this.http.get<Vecino[]>(`${environment.authApiUrl}/vecinos`);
+  }
+
+  /** Valida la residencia de un vecino. */
+  validarVecino(id: string): Observable<Vecino> {
+    return this.http.put<Vecino>(`${environment.authApiUrl}/vecinos/${id}/validar`, {});
+  }
+
+  /** Revoca la validación (vuelve a pendiente). */
+  revocarVecino(id: string): Observable<Vecino> {
+    return this.http.put<Vecino>(`${environment.authApiUrl}/vecinos/${id}/revocar`, {});
   }
 
   /** Borra la sesión local y redirige al login. */
