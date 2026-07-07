@@ -167,6 +167,19 @@ interface ColorPin { hex: string; label: string; }
           </div>
           <div class="news-card-footer">
             <span class="card-meta">Publicado por {{ ev.authorNombre || ev.authorEmail }}</span>
+            @if (isAdmin() && !ev.agrupacionId) {
+              @if (confirmandoNotif() === ev.id) {
+                <span class="notif-confirm">
+                  ¿Enviar a toda la comunidad?
+                  <button class="btn-confirm" [disabled]="notificando()" (click)="confirmarNotificar(ev)">Sí</button>
+                  <button class="btn-cancel" (click)="confirmandoNotif.set(null)">No</button>
+                </span>
+              } @else if (ev.notificadoComunidad) {
+                <button class="btn-notif notificado" (click)="confirmandoNotif.set(ev.id)" title="Volver a notificar">✓ Notificado</button>
+              } @else {
+                <button class="btn-notif" (click)="confirmandoNotif.set(ev.id)">📣 Notificar</button>
+              }
+            }
           </div>
         </article>
       }
@@ -190,6 +203,12 @@ interface ColorPin { hex: string; label: string; }
     .swatch.sel { border-color: #1f2937; }
     .swatch .tick { color: #fff; font-size: 0.8rem; font-weight: 700; text-shadow: 0 0 2px rgba(0,0,0,0.4); }
     .color-nota { font-size: 0.76rem; color: #6b7280; margin-left: 4px; }
+    .btn-notif { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 6px; padding: 3px 10px; font-size: 0.76rem; font-weight: 600; cursor: pointer; }
+    .btn-notif:hover { background: #dbeafe; }
+    .btn-notif.notificado { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+    .notif-confirm { display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; color: #374151; }
+    .btn-confirm { background: #dc2626; color: #fff; border: none; border-radius: 5px; padding: 3px 10px; font-size: 0.74rem; font-weight: 700; cursor: pointer; }
+    .btn-cancel { background: #fff; border: 1px solid #d1d5db; border-radius: 5px; padding: 3px 8px; font-size: 0.74rem; cursor: pointer; }
     .band-actions { margin-left: auto; display: flex; gap: 4px; }
     .band-btn { background: rgba(255,255,255,0.25); border: none; color: #fff; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
     .band-btn:hover { background: rgba(255,255,255,0.45); }
@@ -262,6 +281,21 @@ export class Eventos implements OnInit {
   }
 
   @ViewChild('picker') picker?: MapPicker;
+
+  confirmandoNotif = signal<string | null>(null);
+  notificando = signal<string | null>(null);
+
+  confirmarNotificar(ev: Evento): void {
+    this.notificando.set(ev.id);
+    this.svc.notificar(ev.id).subscribe({
+      next: (actualizado) => {
+        this.eventos.update((p) => p.map((e) => e.id === actualizado.id ? actualizado : e));
+        this.confirmandoNotif.set(null);
+        this.notificando.set(null);
+      },
+      error: () => { this.notificando.set(null); this.error.set('No se pudo enviar la notificación.'); },
+    });
+  }
 
   onPicked(p: { lat: number | null; lng: number | null }): void {
     this.form.latitud = p.lat;

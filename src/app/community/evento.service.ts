@@ -22,6 +22,11 @@ export class EventoService {
     return this.http.put<Evento>(`${this.base}/${id}`, request);
   }
 
+  /** Difunde el evento a toda la comunidad (email + WhatsApp). Solo eventos de comunidad. */
+  notificar(id: string): Observable<Evento> {
+    return this.http.post<Evento>(`${this.base}/${id}/notificar`, {});
+  }
+
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
   }

@@ -22,6 +22,8 @@ export interface Evento {
   recurrenciaFin: string | null;
   authorEmail: string;
   authorNombre: string | null;
+  notificadoComunidad: string | null;
+  recordatorioEnviado: boolean;
   createdAt: string;
 }
 
