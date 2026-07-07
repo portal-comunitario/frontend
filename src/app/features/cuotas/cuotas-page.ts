@@ -83,24 +83,35 @@ interface GrupoSocio { email: string; nombre: string; cuotas: Cuota[]; pagadas: 
       </div>
 
       @if (isAdmin()) {
-        @for (g of grupos(); track g.email) {
-          <div class="socio-block">
-            <div class="socio-cab">
-              <span class="socio-nombre">{{ g.nombre }}</span>
-              <span class="socio-mail">{{ g.email }}</span>
-              <span class="socio-prog">{{ g.pagadas }}/{{ g.cuotas.length }} pagadas</span>
-            </div>
-            <div class="grid-cuotas">
-              @for (c of g.cuotas; track c.id) {
-                <div class="cuota-card" [class.pagada]="c.pagada" [class.vencida]="c.vencida && !c.pagada">
-                  <div class="cc-etq">{{ c.etiqueta }}</div>
-                  <div class="cc-monto">\${{ c.monto | number:'1.0-0' }}</div>
-                  <div class="cc-vto">vence {{ c.vencimiento | date:'dd/MM' }}</div>
-                  <div class="cc-estado">{{ estado(c) }}</div>
-                  <button class="cc-btn" (click)="marcar(c, !c.pagada)">{{ c.pagada ? 'Deshacer' : 'Marcar pagada' }}</button>
-                </div>
-              }
-            </div>
+        @if (grupoSel(); as g) {
+          <button class="btn-volver-socios" (click)="socioSel.set(null)">‹ Volver a socios</button>
+          <div class="socio-cab">
+            <span class="socio-nombre">{{ g.nombre }}</span>
+            <span class="socio-mail">{{ g.email }}</span>
+            <span class="socio-prog">{{ g.pagadas }}/{{ g.cuotas.length }} pagadas</span>
+          </div>
+          <div class="grid-cuotas">
+            @for (c of g.cuotas; track c.id) {
+              <div class="cuota-card" [class.pagada]="c.pagada" [class.vencida]="c.vencida && !c.pagada">
+                <div class="cc-etq">{{ c.etiqueta }}</div>
+                <div class="cc-monto">\${{ c.monto | number:'1.0-0' }}</div>
+                <div class="cc-vto">vence {{ c.vencimiento | date:'dd/MM' }}</div>
+                <div class="cc-estado">{{ estado(c) }}</div>
+                <button class="cc-btn" (click)="marcar(c, !c.pagada)">{{ c.pagada ? 'Deshacer' : 'Marcar pagada' }}</button>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="socios-lista">
+            @for (g of grupos(); track g.email) {
+              <button class="socio-row" (click)="socioSel.set(g.email)">
+                <span class="sr-nombre">{{ g.nombre }}</span>
+                <span class="sr-mail">{{ g.email }}</span>
+                <span class="sr-prog">{{ g.pagadas }}/{{ g.cuotas.length }} pagadas</span>
+                @if (g.pendientes > 0) { <span class="sr-pend">{{ g.pendientes }} pendiente{{ g.pendientes === 1 ? '' : 's' }}</span> }
+                <span class="sr-arrow">›</span>
+              </button>
+            }
           </div>
         }
       } @else {
@@ -140,6 +151,15 @@ interface GrupoSocio { email: string; nombre: string; cuotas: Cuota[]; pagadas: 
     .socio-nombre { font-weight: 700; color: #1f2937; }
     .socio-mail { font-size: 0.76rem; color: #9ca3af; }
     .socio-prog { margin-left: auto; font-size: 0.78rem; font-weight: 600; color: #0f766e; }
+    .socios-lista { display: flex; flex-direction: column; gap: 8px; }
+    .socio-row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: #fff; border: 1px solid #eef2f7; border-radius: 8px; padding: 12px 14px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .socio-row:hover { background: #f8fafc; border-color: #cbd5e1; }
+    .sr-nombre { font-weight: 700; color: #1f2937; }
+    .sr-mail { font-size: 0.78rem; color: #9ca3af; }
+    .sr-prog { margin-left: auto; font-size: 0.78rem; font-weight: 600; color: #0f766e; }
+    .sr-pend { font-size: 0.72rem; font-weight: 700; background: #fef9c3; color: #854d0e; padding: 2px 9px; border-radius: 999px; }
+    .sr-arrow { color: #cbd5e1; font-size: 1.2rem; font-weight: 700; }
+    .btn-volver-socios { background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; border-radius: 6px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer; margin-bottom: 0.75rem; }
     .grid-cuotas { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
     .cuota-card { border: 1px solid #e5e7eb; border-left: 4px solid #eab308; border-radius: 8px; padding: 10px 12px; background: #fffbeb; }
     .cuota-card.pagada { border-left-color: #16a34a; background: #f0fdf4; }
@@ -205,6 +225,14 @@ export class CuotasPage implements OnInit {
   totalPagadas = () => this.cuotas().filter((c) => c.pagada).length;
   totalVencidas = () => this.cuotas().filter((c) => c.vencida && !c.pagada).length;
   totalPendientes = () => this.cuotas().filter((c) => !c.pagada && !c.vencida).length;
+
+  socioSel = signal<string | null>(null);
+
+  grupoSel(): GrupoSocio | null {
+    const email = this.socioSel();
+    if (!email) return null;
+    return this.grupos().find((g) => g.email === email) ?? null;
+  }
 
   grupos(): GrupoSocio[] {
     const map = new Map<string, Cuota[]>();

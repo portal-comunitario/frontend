@@ -98,6 +98,16 @@ export class AuthService {
     return this.http.put<Vecino>(`${environment.authApiUrl}/vecinos/${id}/revocar`, {});
   }
 
+  /** Edita datos del vecino (nombre, teléfono, dirección, email). */
+  updateVecino(id: string, dto: { name: string; telefono: string | null; direccion: string | null; email: string }): Observable<Vecino> {
+    return this.http.put<Vecino>(`${environment.authApiUrl}/vecinos/${id}`, dto);
+  }
+
+  /** Elimina un vecino (borrado real). */
+  deleteVecino(id: string): Observable<void> {
+    return this.http.delete<void>(`${environment.authApiUrl}/vecinos/${id}`);
+  }
+
   /** Borra la sesión local y redirige al login. */
   logout(): void {
     this._token.set(null);
