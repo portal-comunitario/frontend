@@ -157,7 +157,7 @@ const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado
                 </div>
               }
             } @else {
-              <button class="btn-inscribir" (click)="inscribirse(a)">Inscribirme</button>
+              <button class="btn-inscribir" [disabled]="enRevision()" [title]="enRevision() ? 'Tu cuenta está en revisión' : ''" (click)="inscribirse(a)">Inscribirme</button>
             }
           </div>
 
@@ -214,6 +214,7 @@ const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado
     .agr-cta { padding: 0.85rem 1rem; border-top: 1px solid #f3f4f6; }
     .btn-inscribir { width: 100%; background: #003087; color: #fff; border: none; border-radius: 6px; padding: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
     .btn-inscribir:hover { background: #00256b; }
+    .btn-inscribir:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-inscrito { width: 100%; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; border-radius: 6px; padding: 10px; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
     .btn-inscrito:hover { background: #d1fae5; }
     .mis-toggles { display: flex; gap: 8px; margin-top: 8px; }
@@ -276,6 +277,8 @@ export class Agrupaciones implements OnInit {
   nombreDe(email: string): string {
     return this.vecinoNombre()[email] ?? email;
   }
+
+  enRevision(): boolean { return this.auth.enRevision(); }
 
   toggleMenu(id: string): void {
     this.menuAbierto.set(this.menuAbierto() === id ? null : id);

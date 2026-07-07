@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { CertificadoService } from '../../certificado/certificado.service';
 import { SolicitudCertificado } from '../../certificado/certificado.models';
 import { validarRut, formatearRut } from '../../core/rut.util';
+import { AuthService } from '../../auth/auth.service';
 
 /** Trámites — solicitud de certificado de residencia con documentos. */
 @Component({
@@ -20,6 +21,9 @@ import { validarRut, formatearRut } from '../../core/rut.util';
 </section>
 
 <div class="content-area">
+  @if (enRevision()) {
+    <div class="empty-state"><span>🔎</span><p>Tu cuenta está en revisión. Podrás solicitar certificados cuando la directiva apruebe tu acceso.</p></div>
+  } @else {
   <div class="form-panel" style="max-width:640px">
     <h3>Nueva solicitud</h3>
     <form (ngSubmit)="enviar()" #f="ngForm">
@@ -55,6 +59,7 @@ import { validarRut, formatearRut } from '../../core/rut.util';
       </div>
     </form>
   </div>
+  }
 
   <h2 class="section-title">Mis solicitudes</h2>
   @if (loading()) {
@@ -112,6 +117,9 @@ import { validarRut, formatearRut } from '../../core/rut.util';
 })
 export class Tramites implements OnInit {
   protected readonly svc = inject(CertificadoService);
+  private readonly auth = inject(AuthService);
+
+  enRevision(): boolean { return this.auth.enRevision(); }
 
   motivo = '';
   rut = '';

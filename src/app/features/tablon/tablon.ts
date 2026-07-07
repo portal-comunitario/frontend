@@ -22,7 +22,11 @@ declare const google: any;
   <div class="hero-inner">
     <h1>Avisos Vecinales</h1>
     <p>Servicios, compra y venta, arriendos y objetos perdidos entre vecinos. Tu publicación pasa por revisión antes de aparecer.</p>
-    <button class="btn-hero" (click)="toggleForm()">{{ showForm() ? '✕ Cancelar' : '+ Nueva publicación' }}</button>
+    @if (!enRevision()) {
+      <button class="btn-hero" (click)="toggleForm()">{{ showForm() ? '✕ Cancelar' : '+ Nueva publicación' }}</button>
+    } @else {
+      <p class="hero-nota">Tu cuenta está en revisión: podrás publicar cuando la directiva apruebe tu acceso.</p>
+    }
   </div>
 </section>
 
@@ -232,6 +236,8 @@ export class Tablon implements OnInit, AfterViewChecked {
     this.showForm.set(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  enRevision(): boolean { return this.auth.enRevision(); }
 
   puedeGestionar(a: Aviso): boolean {
     const r = this.auth.role();

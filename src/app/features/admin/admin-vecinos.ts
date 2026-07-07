@@ -17,7 +17,7 @@ interface EditForm { name: string; email: string; telefono: string; direccion: s
   <div class="hero-inner">
     <button class="btn-volver" (click)="volver()">‹ Volver a Administración</button>
     <h1>Gestión de vecinos</h1>
-    <p>{{ vecinos().length }} vecino(s) · {{ porValidar() }} por validar.</p>
+    <p>{{ vecinos().length }} vecino(s) · {{ enRevision() }} en revisión.</p>
   </div>
 </section>
 
@@ -31,7 +31,7 @@ interface EditForm { name: string; email: string; telefono: string; direccion: s
       <table class="tabla">
         <thead>
           <tr>
-            <th>Nombre</th><th>Email</th><th>RUT</th><th>Teléfono</th><th>Dirección</th><th>Estado</th><th class="th-acc">Acciones</th>
+            <th>Nombre</th><th>Email</th><th>RUT</th><th>Teléfono</th><th>Dirección</th><th>Rol</th><th>Estado</th><th class="th-acc">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -43,6 +43,7 @@ interface EditForm { name: string; email: string; telefono: string; direccion: s
                 <td class="dim">{{ v.rut || '—' }}</td>
                 <td><input [(ngModel)]="ef.telefono" placeholder="Teléfono" /></td>
                 <td><input [(ngModel)]="ef.direccion" placeholder="Dirección" /></td>
+                <td class="dim">{{ rolLabel(v.role) }}</td>
                 <td>{{ estadoLabel(v) }}</td>
                 <td class="acc">
                   <button class="b-ok" [disabled]="guardando()" (click)="guardar(v)">Guardar</button>
@@ -56,25 +57,25 @@ interface EditForm { name: string; email: string; telefono: string; direccion: s
                 <td>{{ v.rut || '—' }}</td>
                 <td>{{ v.telefono || '—' }}</td>
                 <td>{{ v.direccion || '—' }}</td>
+                <td><span [class.rol-dest]="v.role !== 'VECINO'">{{ rolLabel(v.role) }}</span></td>
                 <td>
-                  @if (v.estadoValidacion === 'VALIDADO') { <span class="badge-ok">✔ Validado</span> }
-                  @else { <span class="badge-pend">Pendiente</span> }
-                  @if (v.role !== 'VECINO') { <span class="badge-rol">{{ rolLabel(v.role) }}</span> }
+                  @if (v.accesoAprobado) { <span class="badge-ok">Con acceso</span> }
+                  @else { <span class="badge-rev">En revisión</span> }
                 </td>
                 <td class="acc">
-                  @if (v.estadoValidacion === 'VALIDADO') {
-                    <button class="b-ghost" (click)="revocar(v)">Revocar</button>
+                  @if (v.accesoAprobado) {
+                    <button class="b-acceso b-ghost" (click)="setAcceso(v, false)">Suspender</button>
                   } @else {
-                    <button class="b-ok" (click)="validar(v)">✔ Validar</button>
+                    <button class="b-acceso b-ok" (click)="setAcceso(v, true)">Aprobar</button>
                   }
-                  <button class="b-edit" (click)="editar(v)">✎</button>
+                  <button class="b-ico b-edit" title="Editar" (click)="editar(v)">✎</button>
                   @if (confirmandoDelete() === v.id) {
                     <span class="del-confirm">¿Eliminar?
                       <button class="b-del" (click)="confirmarEliminar(v)">Sí</button>
-                      <button class="b-ghost" (click)="confirmandoDelete.set(null)">No</button>
+                      <button class="b-ico b-ghost" (click)="confirmandoDelete.set(null)">✕</button>
                     </span>
                   } @else {
-                    <button class="b-del-ico" title="Eliminar" (click)="confirmandoDelete.set(v.id)">🗑</button>
+                    <button class="b-ico b-del-ico" title="Eliminar" (click)="confirmandoDelete.set(v.id)">🗑</button>
                   }
                 </td>
               </tr>
@@ -98,14 +99,19 @@ interface EditForm { name: string; email: string; telefono: string; direccion: s
     .tabla input { width: 100%; min-width: 90px; padding: 5px 7px; border: 1px solid #d1d5db; border-radius: 5px; font-size: 0.82rem; }
     .fila-edit td { background: #f8fafc; }
     .th-acc { text-align: right; }
-    .acc { display: flex; gap: 5px; align-items: center; justify-content: flex-end; flex-wrap: wrap; white-space: nowrap; }
+    .acc { display: flex; gap: 6px; align-items: center; justify-content: flex-end; white-space: nowrap; }
+    .rol-dest { font-weight: 700; color: #3730a3; }
+    .b-acceso { min-width: 92px; text-align: center; padding: 6px 10px; font-size: 0.76rem; border-radius: 6px; }
+    .b-ico { width: 30px; height: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 0.85rem; flex-shrink: 0; }
     .badge-ok { background: #ecfdf5; color: #047857; font-weight: 700; font-size: 0.7rem; padding: 2px 8px; border-radius: 999px; }
     .badge-pend { background: #fef9c3; color: #854d0e; font-weight: 700; font-size: 0.7rem; padding: 2px 8px; border-radius: 999px; }
+    .badge-rev { background: #fef9c3; color: #854d0e; font-weight: 700; font-size: 0.7rem; padding: 2px 8px; border-radius: 999px; }
+    .badge-res { font-size: 0.8rem; margin-left: 2px; }
     .badge-rol { background: #eef2ff; color: #3730a3; font-weight: 700; font-size: 0.68rem; padding: 2px 7px; border-radius: 999px; margin-left: 4px; }
     .b-ok { background: #059669; color: #fff; border: none; border-radius: 5px; padding: 4px 10px; font-size: 0.76rem; cursor: pointer; }
     .b-ghost { background: #fff; border: 1px solid #d1d5db; border-radius: 5px; padding: 4px 10px; font-size: 0.76rem; cursor: pointer; }
-    .b-edit { background: #eef2ff; color: #3730a3; border: none; border-radius: 5px; padding: 4px 9px; font-size: 0.8rem; cursor: pointer; }
-    .b-del-ico { background: #fef2f2; color: #dc2626; border: none; border-radius: 5px; padding: 4px 9px; font-size: 0.8rem; cursor: pointer; }
+    .b-edit { background: #eef2ff; color: #3730a3; border: none; cursor: pointer; }
+    .b-del-ico { background: #fef2f2; color: #dc2626; border: none; cursor: pointer; }
     .b-del { background: #dc2626; color: #fff; border: none; border-radius: 5px; padding: 4px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer; }
     .del-confirm { display: inline-flex; align-items: center; gap: 5px; font-size: 0.76rem; color: #374151; }
   `],
@@ -121,7 +127,7 @@ export class AdminVecinos implements OnInit {
   guardando = signal(false);
   ef: EditForm = { name: '', email: '', telefono: '', direccion: '' };
 
-  porValidar = () => this.vecinos().filter((v) => v.estadoValidacion !== 'VALIDADO').length;
+  enRevision = () => this.vecinos().filter((v) => !v.accesoAprobado).length;
 
   ngOnInit(): void {
     this.auth.getVecinos().subscribe({
@@ -135,6 +141,7 @@ export class AdminVecinos implements OnInit {
 
   validar(v: Vecino): void { this.auth.validarVecino(v.id).subscribe({ next: (u) => this.patch(u) }); }
   revocar(v: Vecino): void { this.auth.revocarVecino(v.id).subscribe({ next: (u) => this.patch(u) }); }
+  setAcceso(v: Vecino, aprobado: boolean): void { this.auth.setAccesoVecino(v.id, aprobado).subscribe({ next: (u) => this.patch(u) }); }
 
   editar(v: Vecino): void {
     this.editando.set(v.id);

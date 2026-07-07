@@ -25,6 +25,13 @@ export class AuthService {
   readonly role = computed(() => this.parseJwtClaim(this._token(), 'role') ?? 'VECINO');
   /** Tenant al que pertenece el usuario (null = sin comunidad asignada). */
   readonly tenantId = computed(() => this.parseJwtClaim(this._token(), 'tenantId'));
+  /** Acceso al sitio aprobado. Tokens antiguos sin el claim se tratan como aprobados. */
+  readonly accesoAprobado = computed(() => {
+    const v = this.parseJwtClaim(this._token(), 'acceso') as unknown;
+    return v == null ? true : v === true || v === 'true';
+  });
+  /** Cuenta nueva en revisión (acceso solo lectura). */
+  readonly enRevision = computed(() => this.isAuthenticated() && !this.accesoAprobado());
 
   /**
    * Intercambia el ID token de Google por la sesión del backend.
@@ -106,6 +113,11 @@ export class AuthService {
   /** Elimina un vecino (borrado real). */
   deleteVecino(id: string): Observable<void> {
     return this.http.delete<void>(`${environment.authApiUrl}/vecinos/${id}`);
+  }
+
+  /** Aprueba o revoca el acceso al sitio de un vecino. */
+  setAccesoVecino(id: string, aprobado: boolean): Observable<Vecino> {
+    return this.http.put<Vecino>(`${environment.authApiUrl}/vecinos/${id}/acceso`, { aprobado });
   }
 
   /** Borra la sesión local y redirige al login. */

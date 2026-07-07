@@ -31,6 +31,7 @@ export interface Profile {
   inicioResidencia: string | null;
   estadoValidacion: string;
   notificacionesActivas: boolean;
+  accesoAprobado: boolean;
 }
 
 /** Campos editables del perfil (PUT /auth/me). */
@@ -51,4 +52,5 @@ export interface Vecino {
   rut: string | null;
   direccion: string | null;
   inicioResidencia: string | null;
+  accesoAprobado: boolean;
 }

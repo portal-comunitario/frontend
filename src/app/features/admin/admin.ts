@@ -75,7 +75,7 @@ export class Admin implements OnInit {
 
   ngOnInit(): void {
     this.avisoSvc.getPendientes().subscribe({ next: (d) => this.avisosPend.set(d.length) });
-    this.auth.getVecinos().subscribe({ next: (d) => this.vecinosPend.set(d.filter((v) => v.estadoValidacion !== 'VALIDADO').length) });
+    this.auth.getVecinos().subscribe({ next: (d) => this.vecinosPend.set(d.filter((v) => !v.accesoAprobado).length) });
     this.cert.pendientes().subscribe({ next: (d) => this.certPend.set(d.length) });
   }
 }

@@ -51,6 +51,12 @@ import { environment } from '../../../environments/environment';
     </div>
   </nav>
 
+  @if (auth.enRevision()) {
+    <div class="revision-banner">
+      <span>🔎 Tu cuenta está <strong>en revisión</strong>. Puedes navegar el portal, pero no publicar ni inscribirte hasta que la directiva apruebe tu acceso.</span>
+    </div>
+  }
+
   <main class="site-main">
     <router-outlet />
   </main>
