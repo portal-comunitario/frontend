@@ -11,8 +11,10 @@ import { environment } from '../../environments/environment';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = inject(AuthService).getToken();
   const isLoginCall = req.url === `${environment.authApiUrl}/google`;
+  // Las llamadas a ms-tenant (plataforma) llevan su propio token; no las tocamos.
+  const isPlatformCall = req.url.startsWith(environment.tenantApiUrl);
 
-  if (!token || isLoginCall) {
+  if (!token || isLoginCall || isPlatformCall) {
     return next(req);
   }
 

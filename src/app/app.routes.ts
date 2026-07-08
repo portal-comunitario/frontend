@@ -2,12 +2,22 @@ import { Routes } from '@angular/router';
 
 import { authGuard } from './auth/auth.guard';
 import { adminGuard } from './auth/admin.guard';
+import { platformGuard } from './platform/platform.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'portal', pathMatch: 'full' },
   {
     path: 'login',
     loadComponent: () => import('./pages/login/login').then((m) => m.Login),
+  },
+  {
+    path: 'platform/login',
+    loadComponent: () => import('./platform/platform-login').then((m) => m.PlatformLogin),
+  },
+  {
+    path: 'platform',
+    canActivate: [platformGuard],
+    loadComponent: () => import('./platform/platform-panel').then((m) => m.PlatformPanel),
   },
   {
     path: 'portal',

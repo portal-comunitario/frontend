@@ -2,6 +2,7 @@ export const environment = {
   production: false,
   authApiUrl: 'http://localhost:8081/auth',
   communityApiUrl: 'http://localhost:8084',
+  tenantApiUrl: 'http://localhost:8082',
   googleClientId: '799389661747-hba38iuhuhhq9g2mg98biegqk0mghquv.apps.googleusercontent.com',
   // Google Maps: pega aquí tu API key (Maps JavaScript API + Geocoding + Places).
   // Restríngela por referrer HTTP en Google Cloud. No es secreta (viaja al navegador),
