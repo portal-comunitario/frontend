@@ -18,7 +18,7 @@ import { PlatformService } from './platform.service';
     <form (ngSubmit)="entrar()" #f="ngForm">
       <div class="field">
         <label>Correo</label>
-        <input name="email" type="email" [(ngModel)]="email" required placeholder="comunidades@maipu.cl" />
+        <input name="email" type="email" [(ngModel)]="email" required />
       </div>
       <div class="field">
         <label>Contraseña</label>

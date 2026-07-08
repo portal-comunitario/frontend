@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 import { ComunidadPlatform, PlatformService } from './platform.service';
 
@@ -7,7 +8,7 @@ import { ComunidadPlatform, PlatformService } from './platform.service';
 @Component({
   selector: 'app-platform-panel',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   template: `
 <header class="pp-header">
   <div class="pp-header-inner">
@@ -74,6 +75,7 @@ import { ComunidadPlatform, PlatformService } from './platform.service';
                 <div class="pp-item-admin">👤 {{ c.adminEmail }}</div>
               </div>
               <div class="pp-item-acc">
+                <a class="b-abrir" [routerLink]="['/c', c.slug]" target="_blank">Abrir portal ↗</a>
                 @if (c.estado === 'ACTIVA') {
                   <button class="b-susp" (click)="cambiar(c, 'SUSPENDIDA')">Suspender</button>
                 } @else {
@@ -123,6 +125,9 @@ import { ComunidadPlatform, PlatformService } from './platform.service';
     .badge-susp { background: #fef2f2; color: #b91c1c; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-left: 6px; }
     .b-susp { background: #fff; color: #dc2626; border: 1px solid #fca5a5; border-radius: 6px; padding: 5px 12px; font-size: 0.78rem; cursor: pointer; white-space: nowrap; }
     .b-act { background: #059669; color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font-size: 0.78rem; cursor: pointer; white-space: nowrap; }
+    .pp-item-acc { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .b-abrir { background: #eef2ff; color: #3730a3; text-decoration: none; border-radius: 6px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+    .b-abrir:hover { background: #e0e7ff; }
     @media (max-width: 760px) { .pp-grid { grid-template-columns: 1fr; } }
   `],
 })

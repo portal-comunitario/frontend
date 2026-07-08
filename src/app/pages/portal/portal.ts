@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AuthService } from '../../auth/auth.service';
+import { TenantService } from '../../tenant/tenant.service';
 import { environment } from '../../../environments/environment';
 
 /**
@@ -19,7 +20,7 @@ import { environment } from '../../../environments/environment';
       <div class="site-logo">
         <span class="logo-icon">🏘️</span>
         <div>
-          <div class="logo-title">{{ communityName }}</div>
+          <div class="logo-title">{{ tenant.nombre() ?? communityName }}</div>
           <div class="logo-sub">Portal Comunitario</div>
         </div>
       </div>
@@ -72,6 +73,7 @@ import { environment } from '../../../environments/environment';
 })
 export class Portal {
   protected readonly auth = inject(AuthService);
+  protected readonly tenant = inject(TenantService);
   protected readonly communityName = environment.communityName;
   protected readonly isAdmin = () => {
     const r = this.auth.role();
