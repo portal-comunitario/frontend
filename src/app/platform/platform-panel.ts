@@ -76,8 +76,12 @@ import { ComunidadPlatform, PlatformService } from './platform.service';
                   @if (c.estado === 'ACTIVA') { <span class="badge-activa">Activa</span> }
                   @else { <span class="badge-susp">Suspendida</span> }
                 </div>
-                <div class="pp-item-meta">{{ c.comuna || '—' }} · <code>{{ c.url }}</code> · código <code>{{ c.codigo }}</code></div>
-                <div class="pp-item-admin">👤 {{ c.adminEmail }}</div>
+                <dl class="pp-meta">
+                  <div><dt>Comuna</dt><dd>{{ c.comuna || '—' }}</dd></div>
+                  <div><dt>Portal</dt><dd><code>{{ c.url }}</code></dd></div>
+                  <div><dt>Código</dt><dd><code>{{ c.codigo }}</code></dd></div>
+                  <div><dt>Admin</dt><dd>{{ c.adminEmail }}</dd></div>
+                </dl>
               </div>
               <div class="pp-item-acc">
                 <a class="b-abrir" [routerLink]="['/c', c.slug]" target="_blank">Abrir portal ↗</a>
@@ -156,21 +160,27 @@ import { ComunidadPlatform, PlatformService } from './platform.service';
     .pp-creada code, .pp-item-meta code { background: #eef2f7; color: #1f2937; padding: 1px 6px; border-radius: 4px; }
     .pp-list-head { display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem; }
     .count-badge { background: #1f2937; color: #fff; border-radius: 999px; font-size: 0.72rem; padding: 2px 9px; font-weight: 700; }
-    .pp-items { display: flex; flex-direction: column; gap: 8px; }
-    .pp-item { display: flex; justify-content: space-between; gap: 12px; border: 1px solid #eef2f7; border-radius: 8px; padding: 0.85rem; }
+    .pp-items { display: flex; flex-direction: column; gap: 10px; }
+    .pp-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border: 1px solid #eef2f7; border-radius: 8px; padding: 0.9rem 1rem; }
     .pp-item.suspendida { opacity: 0.6; }
-    .pp-item-nombre { font-weight: 700; color: #1f2937; }
-    .pp-item-meta { font-size: 0.76rem; color: #6b7280; margin: 3px 0; }
-    .pp-item-admin { font-size: 0.78rem; color: #4b5563; }
+    .pp-item-main { min-width: 0; flex: 1; }
+    .pp-item-nombre { font-weight: 700; color: #1f2937; margin-bottom: 6px; }
+    .pp-meta { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 0.78rem; }
+    .pp-meta > div { display: contents; }
+    .pp-meta dt { color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; font-size: 0.68rem; align-self: center; }
+    .pp-meta dd { margin: 0; color: #4b5563; overflow-wrap: anywhere; }
     .badge-activa { background: #ecfdf5; color: #047857; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-left: 6px; }
     .badge-susp { background: #fef2f2; color: #b91c1c; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-left: 6px; }
-    .b-susp { background: #fff; color: #dc2626; border: 1px solid #fca5a5; border-radius: 6px; padding: 5px 12px; font-size: 0.78rem; cursor: pointer; white-space: nowrap; }
-    .b-act { background: #059669; color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font-size: 0.78rem; cursor: pointer; white-space: nowrap; }
-    .pp-item-acc { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .b-abrir { background: #eef2ff; color: #3730a3; text-decoration: none; border-radius: 6px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+    .pp-item-acc { display: flex; flex-direction: column; align-items: stretch; gap: 6px; width: 132px; flex-shrink: 0; }
+    .pp-item-acc > * { text-align: center; border-radius: 6px; padding: 6px 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .b-abrir { background: #eef2ff; color: #3730a3; text-decoration: none; border: 1px solid transparent; }
     .b-abrir:hover { background: #e0e7ff; }
-    .b-edit { background: #fff; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; padding: 5px 12px; font-size: 0.78rem; cursor: pointer; white-space: nowrap; }
+    .b-edit { background: #fff; color: #374151; border: 1px solid #d1d5db; }
     .b-edit:hover { background: #f3f4f6; }
+    .b-susp { background: #fff; color: #dc2626; border: 1px solid #fca5a5; }
+    .b-susp:hover { background: #fef2f2; }
+    .b-act { background: #059669; color: #fff; border: 1px solid transparent; }
+    .b-act:hover { background: #047857; }
     .pp-modal-back { position: fixed; inset: 0; background: rgba(17,24,39,0.5); display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 50; }
     .pp-modal { background: #fff; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 420px; box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
     .pp-modal h2 { margin: 0 0 0.25rem; font-size: 1.1rem; color: #1f2937; }
