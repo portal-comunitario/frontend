@@ -8,7 +8,6 @@ import { Evento } from '../../community/evento.models';
 import { AsistenciaService } from '../../community/asistencia.service';
 import { AsistenciaSocio } from '../../community/asistencia.models';
 
-/** Panel de asistencia de una agrupación: el dirigente pasa lista por actividad; el vecino ve la suya. */
 @Component({
   selector: 'app-asistencia-panel',
   standalone: true,

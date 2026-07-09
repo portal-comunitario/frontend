@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
 import { environment } from '../../../environments/environment';
 
-/** Pantalla de nueva contraseña — se llega vía enlace /reset?token=... */
 @Component({
   selector: 'app-reset',
   standalone: true,

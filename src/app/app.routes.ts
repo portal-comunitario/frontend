@@ -44,7 +44,6 @@ export const routes: Routes = [
     path: 'reset',
     loadComponent: () => import('./pages/reset/reset').then((m) => m.Reset),
   },
-  // Entrada por comunidad: fija el tenant (slug) y entra al portal.
   {
     path: 'c/:slug',
     loadComponent: () => import('./tenant/tenant-entry').then((m) => m.TenantEntry),
@@ -53,6 +52,5 @@ export const routes: Routes = [
   { path: 'dashboard', redirectTo: 'portal' },
   { path: 'posts', redirectTo: 'portal/tablon' },
   { path: 'events', redirectTo: 'portal/eventos' },
-  // Cualquier otra ruta: 404
   { path: '**', loadComponent: () => import('./pages/not-found/not-found').then((m) => m.NotFound) },
 ];

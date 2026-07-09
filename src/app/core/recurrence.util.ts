@@ -1,6 +1,5 @@
 import { Evento, Frecuencia } from '../community/evento.models';
 
-/** Una ocurrencia concreta de un evento (puntual o recurrente) dentro de un rango. */
 export interface Ocurrencia {
   evento: Evento;
   fechaInicio: Date;
@@ -47,7 +46,6 @@ export function expandirEvento(ev: Evento, rangoIni: Date, rangoFin: Date): Ocur
   return out;
 }
 
-/** Expande una lista de eventos y devuelve las ocurrencias ordenadas por fecha. */
 export function expandirEventos(eventos: Evento[], rangoIni: Date, rangoFin: Date): Ocurrencia[] {
   return eventos
     .flatMap((e) => expandirEvento(e, rangoIni, rangoFin))
@@ -65,7 +63,6 @@ function avanzar(d: Date, f: Frecuencia, n: number): Date {
   return r;
 }
 
-/** Etiqueta legible de la regla de recurrencia (ej: "Semanal", "Cada 2 meses"). */
 export function etiquetaRecurrencia(ev: Evento): string {
   if (!ev.recurrente || !ev.frecuencia) return '';
   const n = Math.max(1, ev.intervalo ?? 1);

@@ -17,11 +17,8 @@ export class AuthService {
   private readonly _token = signal<string | null>(this.readToken());
   private readonly _user = signal<User | null>(this.readUser());
 
-  /** Usuario autenticado actual (reactivo). */
   readonly user = this._user.asReadonly();
-  /** True si hay sesión activa. */
   readonly isAuthenticated = computed(() => this._token() !== null);
-  /** Rol del usuario extraído del JWT. */
   readonly role = computed(() => this.parseJwtClaim(this._token(), 'role') ?? 'VECINO');
   /** Tenant al que pertenece el usuario (null = sin comunidad asignada). */
   readonly tenantId = computed(() => this.parseJwtClaim(this._token(), 'tenantId'));
@@ -105,7 +102,6 @@ export class AuthService {
     return this.http.put<Vecino>(`${environment.authApiUrl}/vecinos/${id}/revocar`, {});
   }
 
-  /** Edita datos del vecino (nombre, teléfono, dirección, email). */
   updateVecino(id: string, dto: { name: string; telefono: string | null; direccion: string | null; email: string }): Observable<Vecino> {
     return this.http.put<Vecino>(`${environment.authApiUrl}/vecinos/${id}`, dto);
   }

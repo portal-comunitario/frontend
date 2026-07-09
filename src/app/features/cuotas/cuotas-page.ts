@@ -10,7 +10,6 @@ import { Cuota, CuotaActivarRequest, CuotaPeriodo } from '../../community/cuota.
 
 interface GrupoSocio { email: string; nombre: string; cuotas: Cuota[]; pagadas: number; pendientes: number; }
 
-/** Página dedicada de cuotas de una agrupación: grilla con colores por estado. */
 @Component({
   selector: 'app-cuotas-page',
   standalone: true,

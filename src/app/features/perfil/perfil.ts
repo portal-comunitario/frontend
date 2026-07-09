@@ -5,7 +5,6 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { Profile, ProfileUpdate } from '../../auth/models/auth.models';
 
-/** Mi Perfil — datos del vecino. Teléfono para WhatsApp; dirección validada vía certificado. */
 @Component({
   selector: 'app-perfil',
   standalone: true,

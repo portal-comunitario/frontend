@@ -24,11 +24,9 @@ export class TenantService {
 
   /** Slug de la comunidad activa (null = portal base / public). */
   readonly slug = this._slug.asReadonly();
-  /** Metadata de la comunidad activa (nombre, comuna, sede). */
   readonly meta = this._meta.asReadonly();
 
   constructor() {
-    // Al arrancar, refresca la metadata si hay una comunidad activa.
     const s = this._slug();
     if (s) this.loadMeta(s);
   }

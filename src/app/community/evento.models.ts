@@ -1,6 +1,5 @@
 export type EventoCategoria = 'GENERAL' | 'CLUB_ADULTO_MAYOR' | 'CENTRO_DE_MADRES' | 'TALLER' | 'REUNION';
 
-/** Frecuencia de recurrencia estilo calendario. */
 export type Frecuencia = 'DIARIA' | 'SEMANAL' | 'MENSUAL' | 'ANUAL';
 
 export interface Evento {

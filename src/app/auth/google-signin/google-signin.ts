@@ -16,10 +16,6 @@ import { AuthResponse } from '../models/auth.models';
 
 const GSI_SRC = 'https://accounts.google.com/gsi/client';
 
-/**
- * Renderiza el botón oficial de Google Sign-In. Al obtener el ID token,
- * lo intercambia con el backend vía AuthService y emite el resultado.
- */
 @Component({
   selector: 'app-google-signin',
   template: `
@@ -53,9 +49,7 @@ export class GoogleSignin implements AfterViewInit {
   private readonly buttonHost =
     viewChild.required<ElementRef<HTMLElement>>('buttonHost');
 
-  /** Emite la respuesta del backend tras un login exitoso. */
   readonly loggedIn = output<AuthResponse>();
-  /** Emite un mensaje cuando el login falla. */
   readonly failed = output<string>();
 
   protected readonly loading = signal(false);
@@ -120,7 +114,6 @@ export class GoogleSignin implements AfterViewInit {
     this.failed.emit(message);
   }
 
-  /** Inserta el script de GIS una sola vez y resuelve cuando carga. */
   private loadGsiScript(): Promise<void> {
     if (window.google?.accounts?.id) {
       return Promise.resolve();

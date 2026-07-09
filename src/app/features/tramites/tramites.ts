@@ -7,7 +7,6 @@ import { SolicitudCertificado } from '../../certificado/certificado.models';
 import { validarRut, formatearRut } from '../../core/rut.util';
 import { AuthService } from '../../auth/auth.service';
 
-/** Trámites — solicitud de certificado de residencia con documentos. */
 @Component({
   selector: 'app-tramites',
   standalone: true,

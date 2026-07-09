@@ -7,7 +7,6 @@ import { Vecino } from '../../auth/models/auth.models';
 
 interface EditForm { name: string; email: string; telefono: string; direccion: string; }
 
-/** Página: gestión de vecinos en tabla (validar residencia, editar, eliminar). */
 @Component({
   selector: 'app-admin-vecinos',
   standalone: true,

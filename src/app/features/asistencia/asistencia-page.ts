@@ -10,7 +10,6 @@ import { AgrupacionService } from '../../community/agrupacion.service';
 import { AsistenciaService } from '../../community/asistencia.service';
 import { AsistenciaSocio } from '../../community/asistencia.models';
 
-/** Página dedicada de asistencia de una agrupación: pasar lista por actividad / ver la propia. */
 @Component({
   selector: 'app-asistencia-page',
   standalone: true,

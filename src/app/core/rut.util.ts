@@ -1,6 +1,3 @@
-/** Utilidades de RUT chileno (validación módulo 11 y formato). */
-
-/** Valida un RUT chileno con su dígito verificador. */
 export function validarRut(rut: string | null | undefined): boolean {
   if (!rut) return false;
   const clean = rut.replace(/[.\-\s]/g, '').toUpperCase();

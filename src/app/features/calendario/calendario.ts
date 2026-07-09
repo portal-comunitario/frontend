@@ -25,7 +25,6 @@ interface Celda {
   items: CalItem[];
 }
 
-/** Calendario mensual del portal — eventos y reuniones periódicas de las agrupaciones. */
 @Component({
   selector: 'app-calendario',
   standalone: true,
@@ -141,7 +140,6 @@ export class Calendario implements OnInit {
     const offset = (primero.getDay() + 6) % 7;
     const inicio = new Date(y, m, 1 - offset);
     const hoyStr = this.ymd(new Date());
-    // Ocurrencias de eventos (incluye recurrentes) expandidas sobre la ventana visible (42 días).
     const fin = new Date(inicio); fin.setDate(inicio.getDate() + 41); fin.setHours(23, 59, 59, 999);
     const eventMap = this.eventosPorDia(inicio, fin);
     const celdas: Celda[] = [];
@@ -173,7 +171,6 @@ export class Calendario implements OnInit {
     const fStr = this.ymd(fecha);
     const items: CalItem[] = [...(eventMap.get(fStr) ?? [])];
 
-    // Reuniones periódicas de agrupaciones
     const fIso = this.ymdIso(fecha);
     const isoDow = ((fecha.getDay() + 6) % 7) + 1; // 1=Lunes .. 7=Domingo
     this.agrupaciones().forEach((a) => {

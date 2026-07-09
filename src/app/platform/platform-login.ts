@@ -4,7 +4,6 @@ import { Router } from '@angular/router';
 
 import { PlatformService } from './platform.service';
 
-/** Login del administrador de plataforma (municipalidad). */
 @Component({
   selector: 'app-platform-login',
   standalone: true,

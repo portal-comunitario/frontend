@@ -131,7 +131,6 @@ export class Inicio implements OnInit {
   comunicados = signal<Comunicado[]>([]);
   proximosEventos = signal<Evento[]>([]);
 
-  /** Fecha en texto: "Domingo 12, Julio 10:00 AM". */
   fechaLarga(iso: string): string {
     const d = new Date(iso);
     const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

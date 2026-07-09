@@ -275,7 +275,6 @@ export class Tablon implements OnInit, AfterViewChecked {
     this.svc.delete(id).subscribe({ next: () => this.avisos.update((p) => p.filter((x) => x.id !== id)) });
   }
 
-  /** Places Autocomplete sobre el input de dirección (restringido a Chile). */
   private initAutocomplete(): void {
     const w = window as any;
     if (!w.google?.maps?.places || !this.direccionInput?.nativeElement) return;

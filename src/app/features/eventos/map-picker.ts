@@ -8,7 +8,6 @@ import { environment } from '../../../environments/environment';
 
 declare const google: any;
 
-/** Mini-mapa para fijar la ubicación de un evento: clic para poner/mover el pin. */
 @Component({
   selector: 'app-map-picker',
   standalone: true,
@@ -76,7 +75,6 @@ export class MapPicker implements AfterViewInit {
     if (this.lat != null && this.lng != null) {
       this.setMarker(this.lat, this.lng);
     } else {
-      // Sin pin previo: centrar con precisión en la sede (geocodificando su dirección).
       this.geocoder.geocode({ address: this.sede.direccion + ', Chile' }, (r: any, s: string) => {
         const pos = s === 'OK' && r?.[0] ? r[0].geometry.location : sedeFallback;
         if (this.map) this.map.setCenter(pos);

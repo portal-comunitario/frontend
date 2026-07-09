@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-/** Página 404 — ruta inexistente. */
 @Component({
   selector: 'app-not-found',
   standalone: true,

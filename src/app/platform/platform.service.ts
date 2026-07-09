@@ -20,7 +20,6 @@ export interface ComunidadPlatform {
 
 const TOKEN_KEY = 'platform.token';
 
-/** Sesión y operaciones del administrador de plataforma (ms-tenant). */
 @Injectable({ providedIn: 'root' })
 export class PlatformService {
   private readonly http = inject(HttpClient);

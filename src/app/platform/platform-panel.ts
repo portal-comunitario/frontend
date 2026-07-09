@@ -4,7 +4,6 @@ import { RouterLink } from '@angular/router';
 
 import { ComunidadPlatform, PlatformService } from './platform.service';
 
-/** Panel de la municipalidad: alta y administración de comunidades. */
 @Component({
   selector: 'app-platform-panel',
   standalone: true,
@@ -203,7 +202,6 @@ export class PlatformPanel implements OnInit {
   adminEmail = '';
   sedeDireccion = '';
 
-  // Edición
   editando = signal<ComunidadPlatform | null>(null);
   guardando = signal(false);
   edError = signal<string | null>(null);

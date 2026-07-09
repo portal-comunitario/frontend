@@ -5,7 +5,6 @@ import { Router } from '@angular/router';
 import { CertificadoService } from '../../certificado/certificado.service';
 import { SolicitudCertificado } from '../../certificado/certificado.models';
 
-/** Página: solicitudes de certificado de residencia (ver documentos, aprobar/rechazar). */
 @Component({
   selector: 'app-admin-certificados',
   standalone: true,

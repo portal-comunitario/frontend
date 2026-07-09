@@ -1,10 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 
-/**
- * Carga el SDK de Google Maps una sola vez (idempotente) y resuelve cuando
- * `google.maps` está disponible. Incluye la librería `places` para autocompletar.
- */
 @Injectable({ providedIn: 'root' })
 export class MapsLoader {
   private promise?: Promise<void>;

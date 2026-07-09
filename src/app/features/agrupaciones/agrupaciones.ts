@@ -11,7 +11,6 @@ import { RouterLink } from '@angular/router';
 
 const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
-/** Sección Agrupaciones — organizaciones comunitarias + actividades + socios + reuniones. */
 @Component({
   selector: 'app-agrupaciones',
   standalone: true,
@@ -210,7 +209,6 @@ const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado
     .socio-item { font-size: 0.8rem; color: #1f2937; padding: 3px 0; display: flex; flex-direction: column; }
     .socio-nombre { font-weight: 600; }
     .socio-mail { font-size: 0.72rem; color: #9ca3af; }
-    /* CTA principal (vecino) */
     .agr-cta { padding: 0.85rem 1rem; border-top: 1px solid #f3f4f6; }
     .btn-inscribir { width: 100%; background: #003087; color: #fff; border: none; border-radius: 6px; padding: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
     .btn-inscribir:hover { background: #00256b; }
@@ -220,7 +218,6 @@ const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado
     .mis-toggles { display: flex; gap: 8px; margin-top: 8px; }
     .mis-toggles button { flex: 1; background: #f0fdfa; color: #0f766e; border: 1px solid #ccfbf1; border-radius: 6px; padding: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
     .mis-toggles button:hover { background: #ccfbf1; }
-    /* Barra de gestión (admin) */
     .agr-admin { background: #f8fafc; border-top: 1px solid #eef2f7; padding: 0.5rem 0.75rem; }
     .gestion-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; background: #fff; border: 1px solid #e2e8f0; color: #475569; font-size: 0.82rem; font-weight: 600; padding: 7px 12px; border-radius: 7px; cursor: pointer; }
     .gestion-toggle:hover, .gestion-toggle.abierto { background: #eef2f7; color: #1f2937; }

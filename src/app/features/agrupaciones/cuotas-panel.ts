@@ -8,7 +8,6 @@ import { Cuota, CuotaActivarRequest, CuotaPeriodo } from '../../community/cuota.
 
 interface GrupoSocio { email: string; cuotas: Cuota[]; pendientes: number; }
 
-/** Panel de cuotas de una agrupación (activar/cerrar/ver/pagar). */
 @Component({
   selector: 'app-cuotas-panel',
   standalone: true,

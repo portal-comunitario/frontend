@@ -14,11 +14,10 @@ import { environment } from '../../../environments/environment';
 
 declare const google: any;
 
-/** Un punto en el mapa: proviene de un aviso del tablón o de un evento. */
 interface MapItem {
   id: string;
   filtro: string;        // clave de filtro (categoría de aviso o 'EVENTOS')
-  tipoLabel: string;     // etiqueta legible del tipo
+  tipoLabel: string;
   color: string;
   esEvento: boolean;     // true = marcador estrella; false = círculo (aviso)
   titulo: string;
@@ -45,7 +44,6 @@ const FILTROS_MAPA: FiltroMapa[] = [
   { value: 'EVENTOS', label: 'Eventos', color: COLOR_EVENTO },
 ];
 
-/** Sección Mapa — avisos del tablón y eventos geolocalizados (Google Maps). Centrado en la sede vecinal. */
 @Component({
   selector: 'app-mapa',
   standalone: true,
@@ -136,7 +134,6 @@ export class Mapa implements OnInit, AfterViewInit {
   private currentCenter: any = null;
   private markers = new Map<string, any>();
 
-  /** Todos los puntos (avisos aprobados + eventos con coordenadas). */
   items = (): MapItem[] => {
     const out: MapItem[] = [];
     this.avisos()
@@ -217,7 +214,6 @@ export class Mapa implements OnInit, AfterViewInit {
     }, 250);
   }
 
-  /** Geocodifica la dirección de la sede para centrar con precisión y marcarla. */
   private placeSede(fallback: { lat: number; lng: number }): void {
     const geocoder = new google.maps.Geocoder();
     geocoder.geocode({ address: this.sede.direccion + ', Chile' }, (results: any, status: string) => {
@@ -268,7 +264,6 @@ export class Mapa implements OnInit, AfterViewInit {
     this.infoWindow.open(this.map, marker);
   }
 
-  /** Próxima ocurrencia de un evento (para mostrar en el mapa). */
   private proximaFecha(e: Evento): string {
     const ahora = new Date();
     const hasta = new Date(ahora); hasta.setFullYear(hasta.getFullYear() + 2);

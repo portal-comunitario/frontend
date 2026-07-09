@@ -41,7 +41,6 @@ export class CertificadoService {
     return this.http.delete<void>(`${this.base}/${id}`);
   }
 
-  /** Abre un archivo (cedula/comprobante/pdf) en una pestaña nueva, autenticado. */
   abrirArchivo(id: string, tipo: 'cedula' | 'comprobante' | 'pdf'): void {
     this.http.get(`${this.base}/${id}/archivo/${tipo}`, { responseType: 'blob' }).subscribe({
       next: (blob) => {

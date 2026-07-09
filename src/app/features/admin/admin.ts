@@ -6,7 +6,6 @@ import { AuthService } from '../../auth/auth.service';
 import { CertificadoService } from '../../certificado/certificado.service';
 import { environment } from '../../../environments/environment';
 
-/** Administración — hub: tarjetas que abren cada gestión en su propia página. */
 @Component({
   selector: 'app-admin',
   standalone: true,

@@ -1,4 +1,3 @@
-/** Usuario autenticado devuelto por el backend. */
 export interface User {
   id: string;
   email: string;
@@ -8,18 +7,15 @@ export interface User {
   tenantId?: string | null;
 }
 
-/** Respuesta de POST /auth/google. */
 export interface AuthResponse {
   token: string;
   user: User;
 }
 
-/** Cuerpo enviado a POST /auth/google. */
 export interface GoogleLoginRequest {
   idToken: string;
 }
 
-/** Perfil completo del vecino (GET /auth/me). */
 export interface Profile {
   email: string;
   name: string;
@@ -34,14 +30,12 @@ export interface Profile {
   accesoAprobado: boolean;
 }
 
-/** Campos editables del perfil (PUT /auth/me). */
 export interface ProfileUpdate {
   name: string;
   telefono: string | null;
   notificacionesActivas: boolean;
 }
 
-/** Vecino para la gestión/validación por el dirigente. */
 export interface Vecino {
   id: string;
   email: string;

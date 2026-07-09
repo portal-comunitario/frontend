@@ -6,7 +6,6 @@ import { AvisoService } from '../../community/aviso.service';
 import { Aviso } from '../../community/aviso.models';
 import { AVISO_COLORS, AVISO_LABELS } from '../../community/aviso.ui';
 
-/** Página: cola de moderación de avisos (aprobar / rechazar). */
 @Component({
   selector: 'app-admin-moderacion',
   standalone: true,

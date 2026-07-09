@@ -4,7 +4,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TenantService } from './tenant.service';
 import { AuthService } from '../auth/auth.service';
 
-/** Punto de entrada de una comunidad: fija el tenant activo (slug) y entra al portal. */
 @Component({
   selector: 'app-tenant-entry',
   standalone: true,
