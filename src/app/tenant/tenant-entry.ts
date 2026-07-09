@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { TenantService } from './tenant.service';
+import { AuthService } from '../auth/auth.service';
 
 /** Punto de entrada de una comunidad: fija el tenant activo (slug) y entra al portal. */
 @Component({
@@ -13,9 +14,15 @@ export class TenantEntry implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly tenant = inject(TenantService);
+  private readonly auth = inject(AuthService);
 
   ngOnInit(): void {
     const slug = this.route.snapshot.paramMap.get('slug');
+    const prev = this.tenant.getSlug();
+    // Cambiar de comunidad cierra la sesión anterior: una sesión pertenece a una comunidad.
+    if (prev && prev !== slug) {
+      this.auth.clearSession();
+    }
     this.tenant.setSlug(slug);
     void this.router.navigate(['/portal']);
   }

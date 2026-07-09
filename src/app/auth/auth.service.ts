@@ -122,12 +122,17 @@ export class AuthService {
 
   /** Borra la sesión local y redirige al login. */
   logout(): void {
+    this.clearSession();
+    void this.router.navigate(['/login']);
+  }
+
+  /** Borra la sesión local SIN redirigir. Se usa al cambiar de comunidad. */
+  clearSession(): void {
     this._token.set(null);
     this._user.set(null);
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     try { (window as any).google?.accounts?.id?.disableAutoSelect(); } catch { /* Google no cargado o sin sesión previa */ }
-    void this.router.navigate(['/login']);
   }
 
   /** Token crudo para adjuntar en cabeceras Authorization. */

@@ -64,7 +64,7 @@ import { environment } from '../../../environments/environment';
 
   <footer class="site-footer">
     <div class="site-footer-inner">
-      <span>© 2026 Portal Comunitario {{ communityName }}</span>
+      <span>© 2026 Portal Comunitario {{ tenant.nombre() ?? communityName }}</span>
       <span>Taller Aplicado de Software · Duoc UC</span>
     </div>
   </footer>

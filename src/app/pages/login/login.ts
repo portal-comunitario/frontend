@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
 import { GoogleSignin } from '../../auth/google-signin/google-signin';
 import { AuthResponse } from '../../auth/models/auth.models';
+import { TenantService } from '../../tenant/tenant.service';
 import { environment } from '../../../environments/environment';
 
 type Modo = 'login' | 'register' | 'forgot';
@@ -19,7 +20,7 @@ type Modo = 'login' | 'register' | 'forgot';
     <div class="login-head">
       <div class="login-logo">🏘️</div>
       <div class="login-title">Portal Comunitario</div>
-      <div class="login-sub">{{ communityName }}</div>
+      <div class="login-sub">{{ tenant.nombre() ?? communityName }}</div>
     </div>
 
     <div class="login-tabs">
@@ -115,6 +116,7 @@ export class Login {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
+  protected readonly tenant = inject(TenantService);
   protected readonly communityName = environment.communityName;
 
   modo = signal<Modo>('login');

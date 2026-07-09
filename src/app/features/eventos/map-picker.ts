@@ -3,6 +3,7 @@ import {
 } from '@angular/core';
 
 import { MapsLoader } from '../../core/maps-loader';
+import { TenantService } from '../../tenant/tenant.service';
 import { environment } from '../../../environments/environment';
 
 declare const google: any;
@@ -42,7 +43,15 @@ export class MapPicker implements AfterViewInit {
   @Output() picked = new EventEmitter<{ lat: number | null; lng: number | null }>();
 
   private readonly loader = inject(MapsLoader);
-  private readonly sede = environment.communitySede;
+  private readonly tenant = inject(TenantService);
+  private get sede() {
+    const t = this.tenant.sede();
+    if (t) {
+      return { nombre: t.nombre, direccion: t.direccion,
+               latitud: environment.communitySede.latitud, longitud: environment.communitySede.longitud };
+    }
+    return environment.communitySede;
+  }
   private map: any = null;
   private marker: any = null;
   private geocoder: any = null;

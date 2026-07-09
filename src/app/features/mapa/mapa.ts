@@ -9,6 +9,7 @@ import { EventoService } from '../../community/evento.service';
 import { Evento } from '../../community/evento.models';
 import { expandirEvento, etiquetaRecurrencia } from '../../core/recurrence.util';
 import { MapsLoader } from '../../core/maps-loader';
+import { TenantService } from '../../tenant/tenant.service';
 import { environment } from '../../../environments/environment';
 
 declare const google: any;
@@ -111,8 +112,19 @@ export class Mapa implements OnInit, AfterViewInit {
   private readonly avisoSvc = inject(AvisoService);
   private readonly eventoSvc = inject(EventoService);
   private readonly loader = inject(MapsLoader);
+  private readonly tenant = inject(TenantService);
   protected readonly filtros = FILTROS_MAPA;
-  private readonly sede = environment.communitySede;
+
+  /** Sede de la comunidad activa; si no hay tenant, cae a la del environment.
+   *  Las coordenadas son solo el centro inicial: la dirección se geocodifica. */
+  private get sede() {
+    const t = this.tenant.sede();
+    if (t) {
+      return { nombre: t.nombre, direccion: t.direccion,
+               latitud: environment.communitySede.latitud, longitud: environment.communitySede.longitud };
+    }
+    return environment.communitySede;
+  }
 
   avisos = signal<Aviso[]>([]);
   eventos = signal<Evento[]>([]);

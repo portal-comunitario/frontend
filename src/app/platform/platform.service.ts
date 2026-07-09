@@ -14,6 +14,8 @@ export interface ComunidadPlatform {
   adminEmail: string;
   estado: string;
   url: string;
+  sedeNombre: string | null;
+  sedeDireccion: string | null;
 }
 
 const TOKEN_KEY = 'platform.token';
@@ -47,7 +49,7 @@ export class PlatformService {
     return this.http.get<ComunidadPlatform[]>(`${this.base}/platform/comunidades`, { headers: this.authHeaders() });
   }
 
-  crear(dto: { nombre: string; comuna: string | null; adminEmail: string }): Observable<ComunidadPlatform> {
+  crear(dto: { nombre: string; comuna: string | null; adminEmail: string; sedeDireccion: string; sedeNombre?: string | null }): Observable<ComunidadPlatform> {
     return this.http.post<ComunidadPlatform>(`${this.base}/platform/comunidades`, dto, { headers: this.authHeaders() });
   }
 

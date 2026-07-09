@@ -33,6 +33,11 @@ import { ComunidadPlatform, PlatformService } from './platform.service';
           <input name="comuna" [(ngModel)]="comuna" placeholder="Ej: Maipú" />
         </div>
         <div class="field">
+          <label>Dirección de la sede *</label>
+          <input name="sedeDireccion" [(ngModel)]="sedeDireccion" required placeholder="Ej: Av. Pajaritos 2900, Maipú" />
+          <span class="pp-hint">Centra el mapa y es el punto de retiro de certificados.</span>
+        </div>
+        <div class="field">
           <label>Correo del administrador *</label>
           <input name="adminEmail" type="email" [(ngModel)]="adminEmail" required placeholder="dirigente@ejemplo.cl" />
         </div>
@@ -143,6 +148,7 @@ export class PlatformPanel implements OnInit {
   nombre = '';
   comuna = '';
   adminEmail = '';
+  sedeDireccion = '';
 
   ngOnInit(): void { this.cargar(); }
 
@@ -157,12 +163,12 @@ export class PlatformPanel implements OnInit {
   crear(): void {
     this.creando.set(true);
     this.error.set(null);
-    this.platform.crear({ nombre: this.nombre.trim(), comuna: this.comuna.trim() || null, adminEmail: this.adminEmail.trim() })
+    this.platform.crear({ nombre: this.nombre.trim(), comuna: this.comuna.trim() || null, adminEmail: this.adminEmail.trim(), sedeDireccion: this.sedeDireccion.trim() })
       .subscribe({
         next: (c) => {
           this.comunidades.update((prev) => [c, ...prev]);
           this.creada.set(c);
-          this.nombre = ''; this.comuna = ''; this.adminEmail = '';
+          this.nombre = ''; this.comuna = ''; this.adminEmail = ''; this.sedeDireccion = '';
           this.creando.set(false);
         },
         error: () => { this.creando.set(false); this.error.set('No se pudo crear la comunidad. Revisa los datos e intenta de nuevo.'); },
