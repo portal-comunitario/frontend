@@ -81,6 +81,7 @@ import { ComunidadPlatform, PlatformService } from './platform.service';
               </div>
               <div class="pp-item-acc">
                 <a class="b-abrir" [routerLink]="['/c', c.slug]" target="_blank">Abrir portal ↗</a>
+                <button class="b-edit" (click)="abrirEditar(c)">Editar</button>
                 @if (c.estado === 'ACTIVA') {
                   <button class="b-susp" (click)="cambiar(c, 'SUSPENDIDA')">Suspender</button>
                 } @else {
@@ -95,6 +96,41 @@ import { ComunidadPlatform, PlatformService } from './platform.service';
 
   </div>
 </div>
+
+@if (editando(); as e) {
+  <div class="pp-modal-back" (click)="cerrarEditar()">
+    <div class="pp-modal" (click)="$event.stopPropagation()">
+      <h2>Editar comunidad</h2>
+      <p class="pp-hint">La URL del portal (<code>/c/{{ e.slug }}</code>) no cambia.</p>
+      <form (ngSubmit)="guardarEdicion()" #ef="ngForm">
+        <div class="field">
+          <label>Nombre *</label>
+          <input name="enombre" [(ngModel)]="edNombre" required />
+        </div>
+        <div class="field">
+          <label>Comuna</label>
+          <input name="ecomuna" [(ngModel)]="edComuna" />
+        </div>
+        <div class="field">
+          <label>Dirección de la sede *</label>
+          <input name="esede" [(ngModel)]="edSedeDireccion" required />
+        </div>
+        <div class="field">
+          <label>Correo del administrador *</label>
+          <input name="eadmin" type="email" [(ngModel)]="edAdminEmail" required />
+          <span class="pp-hint">Si lo cambias, el nuevo admin entra con su correo y el código <code>{{ e.codigo }}</code>.</span>
+        </div>
+        @if (edError()) { <p class="msg-error">{{ edError() }}</p> }
+        <div class="pp-modal-acc">
+          <button type="button" class="b-cancel" (click)="cerrarEditar()">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="guardando() || !ef.valid">
+            {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
   `,
   styles: [`
     .pp-header { background: #1f2937; color: #fff; }
@@ -133,6 +169,13 @@ import { ComunidadPlatform, PlatformService } from './platform.service';
     .pp-item-acc { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .b-abrir { background: #eef2ff; color: #3730a3; text-decoration: none; border-radius: 6px; padding: 5px 12px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
     .b-abrir:hover { background: #e0e7ff; }
+    .b-edit { background: #fff; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; padding: 5px 12px; font-size: 0.78rem; cursor: pointer; white-space: nowrap; }
+    .b-edit:hover { background: #f3f4f6; }
+    .pp-modal-back { position: fixed; inset: 0; background: rgba(17,24,39,0.5); display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 50; }
+    .pp-modal { background: #fff; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 420px; box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
+    .pp-modal h2 { margin: 0 0 0.25rem; font-size: 1.1rem; color: #1f2937; }
+    .pp-modal-acc { display: flex; gap: 8px; justify-content: flex-end; margin-top: 0.5rem; }
+    .b-cancel { background: #fff; color: #374151; border: 1px solid #d1d5db; border-radius: 7px; padding: 10px 16px; font-weight: 600; cursor: pointer; }
     @media (max-width: 760px) { .pp-grid { grid-template-columns: 1fr; } }
   `],
 })
@@ -149,6 +192,15 @@ export class PlatformPanel implements OnInit {
   comuna = '';
   adminEmail = '';
   sedeDireccion = '';
+
+  // Edición
+  editando = signal<ComunidadPlatform | null>(null);
+  guardando = signal(false);
+  edError = signal<string | null>(null);
+  edNombre = '';
+  edComuna = '';
+  edAdminEmail = '';
+  edSedeDireccion = '';
 
   ngOnInit(): void { this.cargar(); }
 
@@ -173,6 +225,39 @@ export class PlatformPanel implements OnInit {
         },
         error: () => { this.creando.set(false); this.error.set('No se pudo crear la comunidad. Revisa los datos e intenta de nuevo.'); },
       });
+  }
+
+  abrirEditar(c: ComunidadPlatform): void {
+    this.edError.set(null);
+    this.edNombre = c.nombre;
+    this.edComuna = c.comuna ?? '';
+    this.edAdminEmail = c.adminEmail;
+    this.edSedeDireccion = c.sedeDireccion ?? '';
+    this.editando.set(c);
+  }
+
+  cerrarEditar(): void {
+    this.editando.set(null);
+    this.guardando.set(false);
+  }
+
+  guardarEdicion(): void {
+    const c = this.editando();
+    if (!c) return;
+    this.guardando.set(true);
+    this.edError.set(null);
+    this.platform.actualizar(c.id, {
+      nombre: this.edNombre.trim(),
+      comuna: this.edComuna.trim() || null,
+      adminEmail: this.edAdminEmail.trim(),
+      sedeDireccion: this.edSedeDireccion.trim(),
+    }).subscribe({
+      next: (u) => {
+        this.comunidades.update((prev) => prev.map((x) => x.id === u.id ? u : x));
+        this.cerrarEditar();
+      },
+      error: () => { this.guardando.set(false); this.edError.set('No se pudieron guardar los cambios.'); },
+    });
   }
 
   cambiar(c: ComunidadPlatform, estado: string): void {

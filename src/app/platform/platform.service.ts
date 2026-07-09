@@ -53,6 +53,10 @@ export class PlatformService {
     return this.http.post<ComunidadPlatform>(`${this.base}/platform/comunidades`, dto, { headers: this.authHeaders() });
   }
 
+  actualizar(id: string, dto: { nombre: string; comuna: string | null; adminEmail: string; sedeDireccion: string; sedeNombre?: string | null }): Observable<ComunidadPlatform> {
+    return this.http.put<ComunidadPlatform>(`${this.base}/platform/comunidades/${id}`, dto, { headers: this.authHeaders() });
+  }
+
   cambiarEstado(id: string, estado: string): Observable<ComunidadPlatform> {
     return this.http.put<ComunidadPlatform>(`${this.base}/platform/comunidades/${id}/estado`, { estado }, { headers: this.authHeaders() });
   }
