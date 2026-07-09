@@ -177,13 +177,10 @@ export class Mapa implements OnInit, AfterViewInit {
     this.eventoSvc.getAll().subscribe({ next: (d) => { this.eventos.set(d); this.refreshMarkers(); } });
   }
 
-  async ngAfterViewInit(): Promise<void> {
-    try {
-      await this.loader.load();
-      this.initMap();
-    } catch (e) {
-      console.error('Google Maps no disponible', e);
-    }
+  ngAfterViewInit(): void {
+    this.loader.load()
+      .then(() => this.initMap())
+      .catch((e) => console.error('Google Maps no disponible', e));
   }
 
   setFiltro(f: string): void { this.mapaFiltro.set(f); this.selectedId.set(null); this.refreshMarkers(); }

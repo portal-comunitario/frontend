@@ -55,13 +55,10 @@ export class GoogleSignin implements AfterViewInit {
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
 
-  async ngAfterViewInit(): Promise<void> {
-    try {
-      await this.loadGsiScript();
-      this.initialize();
-    } catch {
-      this.error.set('No se pudo cargar Google Sign-In.');
-    }
+  ngAfterViewInit(): void {
+    this.loadGsiScript()
+      .then(() => this.initialize())
+      .catch(() => this.error.set('No se pudo cargar Google Sign-In.'));
   }
 
   private initialize(): void {

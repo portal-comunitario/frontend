@@ -55,13 +55,10 @@ export class MapPicker implements AfterViewInit {
   private marker: any = null;
   private geocoder: any = null;
 
-  async ngAfterViewInit(): Promise<void> {
-    try {
-      await this.loader.load();
-      this.initMap();
-    } catch (e) {
-      console.error('Google Maps no disponible', e);
-    }
+  ngAfterViewInit(): void {
+    this.loader.load()
+      .then(() => this.initMap())
+      .catch((e) => console.error('Google Maps no disponible', e));
   }
 
   private initMap(): void {

@@ -8,7 +8,7 @@ export function validarRut(rut: string | null | undefined): boolean {
   let suma = 0;
   let mul = 2;
   for (let i = cuerpo.length - 1; i >= 0; i--) {
-    suma += parseInt(cuerpo[i], 10) * mul;
+    suma += Number.parseInt(cuerpo[i], 10) * mul;
     mul = mul === 7 ? 2 : mul + 1;
   }
   const resto = 11 - (suma % 11);
@@ -23,6 +23,6 @@ export function formatearRut(rut: string | null | undefined): string {
   if (clean.length < 2) return rut;
   const cuerpo = clean.slice(0, -1);
   const dv = clean.slice(-1);
-  const conPuntos = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const conPuntos = cuerpo.replace(/(\d)(?=(\d{3})+$)/g, '$1.');
   return `${conPuntos}-${dv}`;
 }

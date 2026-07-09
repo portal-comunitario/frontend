@@ -48,3 +48,5 @@ Thumbs.db
 
 # Artefactos de montaje (no versionar)
 .fuse_hidden*
+.scannerwork/
+.scannerwork/
