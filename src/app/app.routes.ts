@@ -3,11 +3,17 @@ import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 import { adminGuard } from './auth/admin.guard';
 import { platformGuard } from './platform/platform.guard';
+import { tenantGuard } from './tenant/tenant.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'portal', pathMatch: 'full' },
+  {
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () => import('./pages/landing/landing').then((m) => m.Landing),
+  },
   {
     path: 'login',
+    canActivate: [tenantGuard],
     loadComponent: () => import('./pages/login/login').then((m) => m.Login),
   },
   {
@@ -21,7 +27,7 @@ export const routes: Routes = [
   },
   {
     path: 'portal',
-    canActivate: [authGuard],
+    canActivate: [tenantGuard, authGuard],
     loadComponent: () => import('./pages/portal/portal').then((m) => m.Portal),
     children: [
       { path: '', loadComponent: () => import('./features/inicio/inicio').then((m) => m.Inicio) },
