@@ -6,5 +6,5 @@ import { PlatformService } from './platform.service';
 export const platformGuard: CanActivateFn = () => {
   const platform = inject(PlatformService);
   const router = inject(Router);
-  return platform.isAuthenticated() ? true : router.createUrlTree(['/platform/login']);
+  return platform.isAuthenticated() ? true : router.createUrlTree(['/comunidades/login']);
 };

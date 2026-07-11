@@ -17,11 +17,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login').then((m) => m.Login),
   },
   {
-    path: 'platform/login',
+    path: 'comunidades/login',
     loadComponent: () => import('./platform/platform-login').then((m) => m.PlatformLogin),
   },
   {
-    path: 'platform',
+    path: 'comunidades',
     canActivate: [platformGuard],
     loadComponent: () => import('./platform/platform-panel').then((m) => m.PlatformPanel),
   },

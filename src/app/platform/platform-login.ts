@@ -58,7 +58,7 @@ export class PlatformLogin {
     this.cargando.set(true);
     this.error.set(null);
     this.platform.login(this.email.trim(), this.password).subscribe({
-      next: () => { this.cargando.set(false); void this.router.navigate(['/platform']); },
+      next: () => { this.cargando.set(false); void this.router.navigate(['/comunidades']); },
       error: () => { this.cargando.set(false); this.error.set('Credenciales inválidas.'); },
     });
   }

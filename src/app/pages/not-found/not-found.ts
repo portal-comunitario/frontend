@@ -12,7 +12,7 @@ import { RouterLink } from '@angular/router';
   <p>La dirección que ingresaste no existe o la comunidad no está disponible.</p>
   <div class="nf-actions">
     <a class="btn-primary" routerLink="/portal">Ir al portal</a>
-    <a class="btn-ghost" routerLink="/platform/login">Panel de plataforma</a>
+    <a class="btn-ghost" routerLink="/comunidades/login">Administración municipal</a>
   </div>
 </div>
   `,

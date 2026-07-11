@@ -41,7 +41,7 @@ export class PlatformService {
   logout(): void {
     this._token.set(null);
     localStorage.removeItem(TOKEN_KEY);
-    void this.router.navigate(['/platform/login']);
+    void this.router.navigate(['/comunidades/login']);
   }
 
   listar(): Observable<ComunidadPlatform[]> {
