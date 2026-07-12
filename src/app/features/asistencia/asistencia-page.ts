@@ -4,11 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { AuthService } from '../../auth/auth.service';
-import { EventoService } from '../../community/evento.service';
-import { Evento } from '../../community/evento.models';
 import { AgrupacionService } from '../../community/agrupacion.service';
 import { AsistenciaService } from '../../community/asistencia.service';
-import { AsistenciaSocio } from '../../community/asistencia.models';
+import { AsistenciaSocio, SesionAsistencia } from '../../community/asistencia.models';
 
 @Component({
   selector: 'app-asistencia-page',
@@ -19,51 +17,51 @@ import { AsistenciaSocio } from '../../community/asistencia.models';
   <div class="hero-inner">
     <button class="btn-volver" (click)="volver()">‹ Volver a agrupaciones</button>
     <h1>Asistencia · {{ nombre() || 'Agrupación' }}</h1>
-    <p>Asistencia a las actividades de la agrupación. Verde = presente, rojo = ausente.</p>
+    <p>Asistencia a las reuniones de la agrupación. Verde = presente, rojo = ausente.</p>
   </div>
 </section>
 
 <div class="content-area">
   @if (loading()) {
-    <p class="msg-muted">Cargando actividades…</p>
-  } @else if (actividades().length === 0) {
-    <div class="empty-state"><span>📋</span><p>Esta agrupación aún no tiene actividades registradas.</p></div>
+    <p class="msg-muted">Cargando reuniones…</p>
+  } @else if (sesiones().length === 0) {
+    <div class="empty-state"><span>📋</span><p>Esta agrupación no tiene reuniones registradas. Define un día de reunión para pasar lista.</p></div>
   } @else {
 
-    @for (a of actividades(); track a.id) {
+    @for (s of sesiones(); track s.sesionId) {
       <div class="act-block">
         <div class="act-cab">
           <div>
-            <span class="act-titulo">{{ a.titulo }}</span>
-            <span class="act-fecha">{{ a.fechaInicio | date:'EEEE d MMM, HH:mm' }}</span>
+            <span class="act-titulo">Reunión</span>
+            <span class="act-fecha">{{ s.fecha | date:'EEEE d MMM' }}@if (s.hora) { · {{ s.hora }} }</span>
           </div>
           @if (isAdmin()) {
-            <button class="btn-lista" (click)="abrir(a.id)">{{ abierto() === a.id ? 'Cerrar' : 'Pasar lista' }}</button>
+            <button class="btn-lista" (click)="abrir(s.sesionId)">{{ abierto() === s.sesionId ? 'Cerrar' : 'Pasar lista' }}</button>
           } @else {
-            <span class="mi-estado" [class.presente]="miEstado(a.id) === true" [class.ausente]="miEstado(a.id) === false">
-              {{ miEstado(a.id) === true ? 'Presente' : (miEstado(a.id) === false ? 'Ausente' : 'Sin registrar') }}
+            <span class="mi-estado" [class.presente]="miEstado(s.sesionId) === true" [class.ausente]="miEstado(s.sesionId) === false">
+              {{ miEstado(s.sesionId) === true ? 'Presente' : (miEstado(s.sesionId) === false ? 'Ausente' : 'Sin registrar') }}
             </span>
           }
         </div>
 
-        @if (isAdmin() && abierto() === a.id) {
+        @if (isAdmin() && abierto() === s.sesionId) {
           @if (rosterLoading()) {
             <p class="msg-muted" style="font-size:.82rem">Cargando socios…</p>
           } @else if (roster().length === 0) {
             <p class="msg-muted" style="font-size:.82rem">No hay socios inscritos en esta agrupación.</p>
           } @else {
             <div class="grid-socios">
-              @for (s of roster(); track s.email) {
-                <label class="soc-card" [class.on]="s.presente">
-                  <input type="checkbox" [(ngModel)]="s.presente" />
-                  <span class="soc-nombre">{{ nombreDe(s.email) }}</span>
-                  <span class="soc-flag">{{ s.presente ? '✔ Presente' : 'Ausente' }}</span>
+              @for (soc of roster(); track soc.email) {
+                <label class="soc-card" [class.on]="soc.presente">
+                  <input type="checkbox" [(ngModel)]="soc.presente" />
+                  <span class="soc-nombre">{{ nombreDe(soc.email) }}</span>
+                  <span class="soc-flag">{{ soc.presente ? '✔ Presente' : 'Ausente' }}</span>
                 </label>
               }
             </div>
             <div class="roster-actions">
               <span class="roster-count">{{ presentesCount() }} de {{ roster().length }} presentes</span>
-              <button class="btn-primary" [disabled]="saving()" (click)="guardar(a.id)">Guardar lista</button>
+              <button class="btn-primary" [disabled]="saving()" (click)="guardar(s.sesionId)">Guardar lista</button>
             </div>
           }
         }
@@ -98,7 +96,6 @@ import { AsistenciaSocio } from '../../community/asistencia.models';
 export class AsistenciaPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly eventos = inject(EventoService);
   private readonly agrupacionSvc = inject(AgrupacionService);
   private readonly svc = inject(AsistenciaService);
   private readonly auth = inject(AuthService);
@@ -110,7 +107,7 @@ export class AsistenciaPage implements OnInit {
 
   agrupacionId = '';
   nombre = signal('');
-  actividades = signal<Evento[]>([]);
+  sesiones = signal<SesionAsistencia[]>([]);
   loading = signal(true);
   abierto = signal<string | null>(null);
   roster = signal<AsistenciaSocio[]>([]);
@@ -134,14 +131,8 @@ export class AsistenciaPage implements OnInit {
 
   private cargar(): void {
     this.loading.set(true);
-    this.eventos.getAll().subscribe({
-      next: (evs) => {
-        const propias = evs
-          .filter((e) => e.agrupacionId === this.agrupacionId)
-          .sort((a, b) => (a.fechaInicio < b.fechaInicio ? 1 : -1));
-        this.actividades.set(propias);
-        this.loading.set(false);
-      },
+    this.svc.sesiones(this.agrupacionId).subscribe({
+      next: (s) => { this.sesiones.set(s); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
     if (!this.isAdmin()) {
@@ -153,26 +144,26 @@ export class AsistenciaPage implements OnInit {
 
   nombreDe(email: string): string { return this.vecinoNombre()[email] ?? email; }
 
-  miEstado(eventoId: string): boolean | null {
-    return this.mia().has(eventoId) ? this.mia().get(eventoId)! : null;
+  miEstado(sesionId: string): boolean | null {
+    return this.mia().has(sesionId) ? this.mia().get(sesionId)! : null;
   }
 
   presentesCount(): number { return this.roster().filter((s) => s.presente).length; }
 
-  abrir(eventoId: string): void {
-    if (this.abierto() === eventoId) { this.abierto.set(null); return; }
-    this.abierto.set(eventoId);
+  abrir(sesionId: string): void {
+    if (this.abierto() === sesionId) { this.abierto.set(null); return; }
+    this.abierto.set(sesionId);
     this.rosterLoading.set(true);
-    this.svc.deActividad(eventoId).subscribe({
+    this.svc.deSesion(this.agrupacionId, sesionId).subscribe({
       next: (r) => { this.roster.set(r); this.rosterLoading.set(false); },
       error: () => this.rosterLoading.set(false),
     });
   }
 
-  guardar(eventoId: string): void {
+  guardar(sesionId: string): void {
     this.saving.set(true);
     const presentes = this.roster().filter((s) => s.presente).map((s) => s.email);
-    this.svc.marcar(eventoId, presentes).subscribe({
+    this.svc.marcarSesion(this.agrupacionId, sesionId, presentes).subscribe({
       next: (r) => { this.roster.set(r); this.saving.set(false); },
       error: () => this.saving.set(false),
     });

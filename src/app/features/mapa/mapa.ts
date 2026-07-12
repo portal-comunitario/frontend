@@ -25,6 +25,7 @@ interface MapItem {
   lat: number;
   lng: number;
   extra?: string;        // dirección (aviso) o próxima fecha (evento)
+  contacto?: string;     // teléfono de contacto (aviso)
   autor: string;
 }
 
@@ -86,6 +87,7 @@ const FILTROS_MAPA: FiltroMapa[] = [
           @if (selectedId()===it.id) {
             <div class="list-item-detail">
               <p>{{ it.descripcion }}</p>
+              @if (it.contacto) { <p style="margin:2px 0;font-size:.8rem;color:#0f766e;font-weight:600">📞 {{ it.contacto }}</p> }
               <span class="msg-muted" style="font-size:.72rem">{{ it.autor }}</span>
             </div>
           }
@@ -148,6 +150,7 @@ export class Mapa implements OnInit, AfterViewInit {
         descripcion: a.descripcion + (a.precio != null ? ` — $ ${a.precio}` : ''),
         lat: a.latitud!, lng: a.longitud!,
         extra: a.direccion ?? undefined,
+        contacto: a.contacto ?? undefined,
         autor: a.authorEmail,
       }));
     this.eventos()
@@ -252,11 +255,14 @@ export class Mapa implements OnInit, AfterViewInit {
     const extra = it.extra
       ? `<br><span style="font-size:.78rem;color:#6b7280;display:block;margin-top:4px">📍 ${it.extra}</span>`
       : '';
+    const contacto = it.contacto
+      ? `<span style="font-size:.8rem;color:#0f766e;display:block;margin-top:4px">📞 ${it.contacto}</span>`
+      : '';
     this.infoWindow.setContent(
       `<div style="min-width:200px;font-family:system-ui"><strong style="font-size:.9rem">${it.titulo}</strong><br>` +
       `<span style="font-size:.7rem;background:${it.color};color:#fff;padding:1px 7px;border-radius:999px;font-weight:700">${it.tipoLabel}</span>` +
       `${extra}<p style="margin:6px 0 2px;font-size:.82rem;color:#374151">${it.descripcion}</p>` +
-      `<span style="font-size:.72rem;color:#9ca3af">${it.autor}</span></div>`,
+      `${contacto}<span style="font-size:.72rem;color:#9ca3af">${it.autor}</span></div>`,
     );
     this.infoWindow.open(this.map, marker);
   }
