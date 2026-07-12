@@ -32,9 +32,16 @@ export class TenantService {
   }
 
   setSlug(slug: string | null): void {
+    const prev = this._slug();
     this._slug.set(slug);
     if (slug) {
       localStorage.setItem(SLUG_KEY, slug);
+      // Al cambiar de comunidad, descarta la metadata anterior: si la nueva no carga
+      // (suspendida o desconocida) no debe mostrarse el nombre de la comunidad previa.
+      if (slug !== prev) {
+        this._meta.set(null);
+        localStorage.removeItem(META_KEY);
+      }
       this.loadMeta(slug);
     } else {
       localStorage.removeItem(SLUG_KEY);
