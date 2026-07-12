@@ -10,7 +10,10 @@ import { environment } from '../../environments/environment';
  */
 export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
   const slug = inject(TenantService).getSlug();
-  const isApi = req.url.startsWith(environment.authApiUrl) || req.url.startsWith(environment.communityApiUrl);
+  // Raíz de ms-auth SIN el sufijo /auth, para cubrir también /certificados y /contactos
+  // (antes solo matcheaba authApiUrl='/api-auth/auth' y dejaba esos endpoints sin X-Tenant-ID → 403).
+  const authRoot = environment.authApiUrl.replace(/\/auth$/, '');
+  const isApi = req.url.startsWith(authRoot) || req.url.startsWith(environment.communityApiUrl);
 
   if (!slug || !isApi) {
     return next(req);
