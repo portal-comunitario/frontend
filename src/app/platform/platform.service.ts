@@ -60,6 +60,11 @@ export class PlatformService {
     return this.http.put<ComunidadPlatform>(`${this.base}/platform/comunidades/${id}/estado`, { estado }, { headers: this.authHeaders() });
   }
 
+  /** Elimina una comunidad de forma definitiva. El backend exige que esté SUSPENDIDA. */
+  eliminar(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/platform/comunidades/${id}`, { headers: this.authHeaders() });
+  }
+
   getToken(): string | null {
     return this._token();
   }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
@@ -66,34 +66,74 @@ import { ComunidadPlatform, PlatformService } from './platform.service';
       } @else if (comunidades().length === 0) {
         <p class="msg-muted">Aún no hay comunidades. Crea la primera.</p>
       } @else {
-        <div class="pp-items">
-          @for (c of comunidades(); track c.id) {
-            <div class="pp-item" [class.suspendida]="c.estado === 'SUSPENDIDA'">
-              <div class="pp-item-main">
-                <div class="pp-item-nombre">
-                  {{ c.nombre }}
-                  @if (c.estado === 'ACTIVA') { <span class="badge-activa">Activa</span> }
-                  @else { <span class="badge-susp">Suspendida</span> }
-                </div>
-                <dl class="pp-meta">
-                  <div><dt>Comuna</dt><dd>{{ c.comuna || '—' }}</dd></div>
-                  <div><dt>Portal</dt><dd><code>{{ c.url }}</code></dd></div>
-                  <div><dt>Código</dt><dd><code>{{ c.codigo }}</code></dd></div>
-                  <div><dt>Admin</dt><dd>{{ c.adminEmail }}</dd></div>
-                </dl>
-              </div>
-              <div class="pp-item-acc">
-                <a class="b-abrir" [routerLink]="['/c', c.slug]" target="_blank">Abrir portal ↗</a>
-                <button class="b-edit" (click)="abrirEditar(c)">Editar</button>
-                @if (c.estado === 'ACTIVA') {
-                  <button class="b-susp" (click)="cambiar(c, 'SUSPENDIDA')">Suspender</button>
-                } @else {
-                  <button class="b-act" (click)="cambiar(c, 'ACTIVA')">Reactivar</button>
+
+        <section class="pp-section">
+          <button type="button" class="pp-section-head" (click)="verActivas.set(!verActivas())">
+            <span class="pp-chev" [class.abierta]="verActivas()">▸</span>
+            Activas <span class="count-badge count-activa">{{ activas().length }}</span>
+          </button>
+          @if (verActivas()) {
+            @if (activas().length === 0) {
+              <p class="msg-muted pp-section-empty">No hay comunidades activas.</p>
+            } @else {
+              <div class="pp-items">
+                @for (c of activas(); track c.id) {
+                  <div class="pp-item">
+                    <div class="pp-item-main">
+                      <div class="pp-item-nombre">{{ c.nombre }} <span class="badge-activa">Activa</span></div>
+                      <dl class="pp-meta">
+                        <div><dt>Comuna</dt><dd>{{ c.comuna || '—' }}</dd></div>
+                        <div><dt>Portal</dt><dd><code>{{ c.url }}</code></dd></div>
+                        <div><dt>Código</dt><dd><code>{{ c.codigo }}</code></dd></div>
+                        <div><dt>Admin</dt><dd>{{ c.adminEmail }}</dd></div>
+                      </dl>
+                    </div>
+                    <div class="pp-item-acc">
+                      <a class="b-abrir" [routerLink]="['/c', c.slug]" target="_blank">Abrir portal ↗</a>
+                      <button class="b-edit" (click)="abrirEditar(c)">Editar</button>
+                      <button class="b-susp" (click)="cambiar(c, 'SUSPENDIDA')">Suspender</button>
+                    </div>
+                  </div>
                 }
               </div>
-            </div>
+            }
           }
-        </div>
+        </section>
+
+        <section class="pp-section">
+          <button type="button" class="pp-section-head" (click)="verSuspendidas.set(!verSuspendidas())">
+            <span class="pp-chev" [class.abierta]="verSuspendidas()">▸</span>
+            Suspendidas <span class="count-badge count-susp">{{ suspendidas().length }}</span>
+          </button>
+          @if (verSuspendidas()) {
+            @if (suspendidas().length === 0) {
+              <p class="msg-muted pp-section-empty">No hay comunidades suspendidas.</p>
+            } @else {
+              <div class="pp-items">
+                @for (c of suspendidas(); track c.id) {
+                  <div class="pp-item suspendida">
+                    <div class="pp-item-main">
+                      <div class="pp-item-nombre">{{ c.nombre }} <span class="badge-susp">Suspendida</span></div>
+                      <dl class="pp-meta">
+                        <div><dt>Comuna</dt><dd>{{ c.comuna || '—' }}</dd></div>
+                        <div><dt>Portal</dt><dd><code>{{ c.url }}</code></dd></div>
+                        <div><dt>Código</dt><dd><code>{{ c.codigo }}</code></dd></div>
+                        <div><dt>Admin</dt><dd>{{ c.adminEmail }}</dd></div>
+                      </dl>
+                    </div>
+                    <div class="pp-item-acc">
+                      <a class="b-abrir" [routerLink]="['/c', c.slug]" target="_blank">Abrir portal ↗</a>
+                      <button class="b-edit" (click)="abrirEditar(c)">Editar</button>
+                      <button class="b-act" (click)="cambiar(c, 'ACTIVA')">Reactivar</button>
+                      <button class="b-del" (click)="abrirEliminar(c)">Eliminar</button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          }
+        </section>
+
       }
     </div>
 
@@ -134,6 +174,32 @@ import { ComunidadPlatform, PlatformService } from './platform.service';
     </div>
   </div>
 }
+
+@if (eliminando(); as d) {
+  <div class="pp-modal-back" (click)="cerrarEliminar()">
+    <div class="pp-modal" (click)="$event.stopPropagation()">
+      <h2 class="pp-del-title">🗑️ Eliminar comunidad</h2>
+      <p class="pp-del-warn">
+        Esta acción es <strong>irreversible</strong>. Se eliminarán de forma permanente el portal
+        <code>/c/{{ d.slug }}</code> y <strong>todos los datos</strong> de la comunidad
+        (vecinos, publicaciones, eventos, agrupaciones, cuotas).
+      </p>
+      <div class="field">
+        <label>Para confirmar, escribe el nombre exacto: <strong>{{ d.nombre }}</strong></label>
+        <input name="delconf" [(ngModel)]="confNombre" placeholder="Nombre de la comunidad" autocomplete="off" />
+      </div>
+      @if (delError()) { <p class="msg-error">{{ delError() }}</p> }
+      <div class="pp-modal-acc">
+        <button type="button" class="b-cancel" (click)="cerrarEliminar()">Cancelar</button>
+        <button type="button" class="btn-danger"
+          [disabled]="borrando() || !nombreCoincide(d.nombre)"
+          (click)="confirmarEliminar()">
+          {{ borrando() ? 'Eliminando…' : 'Eliminar definitivamente' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
   `,
   styles: [`
     .pp-header { background: #1f2937; color: #fff; }
@@ -159,7 +225,15 @@ import { ComunidadPlatform, PlatformService } from './platform.service';
     .pp-creada code, .pp-item-meta code { background: #eef2f7; color: #1f2937; padding: 1px 6px; border-radius: 4px; }
     .pp-list-head { display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem; }
     .count-badge { background: #1f2937; color: #fff; border-radius: 999px; font-size: 0.72rem; padding: 2px 9px; font-weight: 700; }
-    .pp-items { display: flex; flex-direction: column; gap: 10px; }
+    .pp-section { margin-bottom: 0.5rem; }
+    .pp-section-head { width: 100%; display: flex; align-items: center; gap: 8px; background: none; border: none; padding: 8px 2px; font-size: 0.9rem; font-weight: 700; color: #374151; cursor: pointer; }
+    .pp-section-head:hover { color: #1f2937; }
+    .pp-chev { display: inline-block; transition: transform 0.15s; color: #9ca3af; font-size: 0.8rem; }
+    .pp-chev.abierta { transform: rotate(90deg); }
+    .count-activa { background: #059669; }
+    .count-susp { background: #b91c1c; }
+    .pp-section-empty { padding: 4px 2px 10px; }
+    .pp-items { display: flex; flex-direction: column; gap: 10px; margin: 0 0 0.5rem; }
     .pp-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border: 1px solid #eef2f7; border-radius: 8px; padding: 0.9rem 1rem; }
     .pp-item.suspendida { opacity: 0.6; }
     .pp-item-main { min-width: 0; flex: 1; }
@@ -180,6 +254,14 @@ import { ComunidadPlatform, PlatformService } from './platform.service';
     .b-susp:hover { background: #fef2f2; }
     .b-act { background: #059669; color: #fff; border: 1px solid transparent; }
     .b-act:hover { background: #047857; }
+    .b-del { background: #b91c1c; color: #fff; border: 1px solid transparent; }
+    .b-del:hover { background: #991b1b; }
+    .btn-danger { background: #b91c1c; color: #fff; border: none; border-radius: 7px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+    .btn-danger:hover { background: #991b1b; }
+    .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+    .pp-del-title { color: #b91c1c !important; }
+    .pp-del-warn { font-size: 0.84rem; color: #7f1d1d; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 0.75rem; margin: 0 0 1rem; }
+    .pp-del-warn code { background: #fee2e2; color: #7f1d1d; padding: 1px 6px; border-radius: 4px; }
     .pp-modal-back { position: fixed; inset: 0; background: rgba(17,24,39,0.5); display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 50; }
     .pp-modal { background: #fff; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 420px; box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
     .pp-modal h2 { margin: 0 0 0.25rem; font-size: 1.1rem; color: #1f2937; }
@@ -196,6 +278,18 @@ export class PlatformPanel implements OnInit {
   creando = signal(false);
   error = signal<string | null>(null);
   creada = signal<ComunidadPlatform | null>(null);
+
+  // Grupos por estado (secciones colapsables)
+  activas = computed(() => this.comunidades().filter((c) => c.estado === 'ACTIVA'));
+  suspendidas = computed(() => this.comunidades().filter((c) => c.estado === 'SUSPENDIDA'));
+  verActivas = signal(true);
+  verSuspendidas = signal(true);
+
+  // Eliminación (hard delete con confirmación por nombre)
+  eliminando = signal<ComunidadPlatform | null>(null);
+  borrando = signal(false);
+  delError = signal<string | null>(null);
+  confNombre = '';
 
   nombre = '';
   comuna = '';
@@ -271,6 +365,44 @@ export class PlatformPanel implements OnInit {
   cambiar(c: ComunidadPlatform, estado: string): void {
     this.platform.cambiarEstado(c.id, estado).subscribe({
       next: (u) => this.comunidades.update((prev) => prev.map((x) => x.id === u.id ? u : x)),
+    });
+  }
+
+  abrirEliminar(c: ComunidadPlatform): void {
+    this.confNombre = '';
+    this.delError.set(null);
+    this.borrando.set(false);
+    this.eliminando.set(c);
+  }
+
+  cerrarEliminar(): void {
+    this.eliminando.set(null);
+    this.borrando.set(false);
+    this.confNombre = '';
+  }
+
+  /** Confirmación tolerante a mayúsculas/minúsculas y espacios (el label se ve en mayúsculas). */
+  nombreCoincide(nombre: string): boolean {
+    return this.confNombre.trim().toLocaleLowerCase() === nombre.trim().toLocaleLowerCase();
+  }
+
+  confirmarEliminar(): void {
+    const c = this.eliminando();
+    if (!c || !this.nombreCoincide(c.nombre)) return;
+    this.borrando.set(true);
+    this.delError.set(null);
+    this.platform.eliminar(c.id).subscribe({
+      next: () => {
+        this.comunidades.update((prev) => prev.filter((x) => x.id !== c.id));
+        this.cerrarEliminar();
+      },
+      error: (e) => {
+        this.borrando.set(false);
+        const err = e as { status?: number };
+        this.delError.set(err?.status === 409
+          ? 'La comunidad debe estar suspendida antes de eliminarla.'
+          : 'No se pudo eliminar la comunidad. Intenta de nuevo.');
+      },
     });
   }
 }
