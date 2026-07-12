@@ -11,7 +11,7 @@ export const authGuard: CanActivateFn = (_route, state) => {
     return true;
   }
 
-  return router.createUrlTree(['/login'], {
-    queryParams: { returnUrl: state.url },
-  });
+  // Guardamos el destino en memoria (no en la URL) para que quede limpia: /login
+  auth.setRedirectUrl(state.url);
+  return router.createUrlTree(['/login']);
 };

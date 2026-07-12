@@ -17,6 +17,9 @@ export class AuthService {
   private readonly _token = signal<string | null>(this.readToken());
   private readonly _user = signal<User | null>(this.readUser());
 
+  /** Destino al que volver tras el login (lo fija authGuard, lo consume el login). */
+  private _redirectUrl: string | null = null;
+
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = computed(() => this._token() !== null);
   readonly role = computed(() => this.parseJwtClaim(this._token(), 'role') ?? 'VECINO');
@@ -134,6 +137,18 @@ export class AuthService {
   /** Token crudo para adjuntar en cabeceras Authorization. */
   getToken(): string | null {
     return this._token();
+  }
+
+  /** authGuard guarda aquí la URL a la que el usuario intentaba entrar. */
+  setRedirectUrl(url: string | null): void {
+    this._redirectUrl = url;
+  }
+
+  /** El login lee y limpia el destino guardado (null si no hay). */
+  takeRedirectUrl(): string | null {
+    const url = this._redirectUrl;
+    this._redirectUrl = null;
+    return url;
   }
 
   private persistSession(res: AuthResponse): void {

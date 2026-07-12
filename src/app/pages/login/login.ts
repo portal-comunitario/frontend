@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
 import { AuthService } from '../../auth/auth.service';
@@ -114,7 +114,6 @@ type Modo = 'login' | 'register' | 'forgot';
 export class Login {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
 
   protected readonly tenant = inject(TenantService);
   protected readonly communityName = environment.communityName;
@@ -168,7 +167,7 @@ export class Login {
 
   private goToApp(): void {
     this.loading.set(false);
-    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/portal';
+    const returnUrl = this.auth.takeRedirectUrl() ?? '/portal';
     void this.router.navigateByUrl(returnUrl);
   }
 
