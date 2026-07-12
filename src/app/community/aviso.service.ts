@@ -38,6 +38,10 @@ export class AvisoService {
     return this.http.put<Aviso>(`${this.base}/${id}/resuelto`, {});
   }
 
+  reabrir(id: string): Observable<Aviso> {
+    return this.http.put<Aviso>(`${this.base}/${id}/reabrir`, {});
+  }
+
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
   }

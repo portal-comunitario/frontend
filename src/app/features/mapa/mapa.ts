@@ -139,7 +139,7 @@ export class Mapa implements OnInit, AfterViewInit {
   items = (): MapItem[] => {
     const out: MapItem[] = [];
     this.avisos()
-      .filter((a) => a.latitud != null && a.longitud != null && a.estado === 'APROBADO')
+      .filter((a) => a.latitud != null && a.longitud != null && a.estado === 'APROBADO' && !a.resuelto)
       .forEach((a) => out.push({
         id: 'a-' + a.id,
         filtro: a.categoria,

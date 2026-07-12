@@ -105,7 +105,7 @@ declare const google: any;
   } @else {
     <div class="cards-grid">
       @for (a of avisosFiltrados(); track a.id) {
-        <article class="news-card">
+        <article class="news-card" [class.ghost]="a.resuelto">
           <div class="news-card-band" [style.background]="AVISO_COLORS[a.categoria] ?? '#6366f1'">
             <span class="news-card-tipo">{{ AVISO_LABELS[a.categoria] ?? a.categoria }}</span>
             <div class="band-right">
@@ -114,8 +114,12 @@ declare const google: any;
               @else if (a.estado === 'RECHAZADO') { <span class="badge-rechazado">Rechazado</span> }
               @if (puedeGestionar(a)) {
                 <div class="band-actions">
-                  @if (!a.resuelto) { <button class="band-btn" title="Marcar resuelto" (click)="marcarResuelto(a.id)">✓</button> }
-                  <button class="band-btn" title="Editar" (click)="editar(a)">✏️</button>
+                  @if (a.resuelto) {
+                    <button class="band-btn" title="Reabrir aviso" (click)="reabrir(a.id)">↩</button>
+                  } @else {
+                    <button class="band-btn" title="Marcar resuelto" (click)="marcarResuelto(a.id)">✓</button>
+                    <button class="band-btn" title="Editar" (click)="editar(a)">✏️</button>
+                  }
                   <button class="band-btn" title="Eliminar" (click)="delete(a.id)">✕</button>
                 </div>
               }
@@ -123,6 +127,9 @@ declare const google: any;
           </div>
           <div class="news-card-body">
             <h3>{{ a.titulo }}</h3>
+            @if (a.resuelto) {
+              <p class="ghost-nota">👻 Resuelto — solo tú lo ves. Reábrelo con ↩ o se eliminará solo a los 30 días.</p>
+            }
             <p>{{ a.descripcion }}</p>
             @if (a.precio != null) { <p class="card-precio">$ {{ a.precio | number:'1.0-0' }}</p> }
             @if (a.contacto) { <p class="card-dir">📞 {{ a.contacto }}</p> }
@@ -143,6 +150,9 @@ declare const google: any;
     .band-actions { display: flex; gap: 4px; }
     .band-btn { background: rgba(255,255,255,0.25); border: none; color: #fff; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
     .band-btn:hover { background: rgba(255,255,255,0.45); }
+    .news-card.ghost { opacity: 0.6; filter: grayscale(0.85); }
+    .news-card.ghost:hover { opacity: 0.85; }
+    .ghost-nota { font-size: 0.74rem; color: #6b7280; background: #f3f4f6; border-radius: 6px; padding: 5px 8px; margin: 0 0 6px; }
   `],
 })
 export class Tablon implements OnInit, AfterViewChecked {
@@ -268,7 +278,12 @@ export class Tablon implements OnInit, AfterViewChecked {
   }
 
   marcarResuelto(id: string): void {
+    if (!confirm('¿Marcar este aviso como resuelto? Dejará de verse para los vecinos y en el mapa. Solo tú lo verás (en gris); podrás reabrirlo, y si no, se elimina solo a los 30 días.')) return;
     this.svc.marcarResuelto(id).subscribe({ next: (u) => this.avisos.update((p) => p.map((x) => x.id === id ? u : x)) });
+  }
+
+  reabrir(id: string): void {
+    this.svc.reabrir(id).subscribe({ next: (u) => this.avisos.update((p) => p.map((x) => x.id === id ? u : x)) });
   }
 
   delete(id: string): void {

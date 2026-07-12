@@ -14,6 +14,7 @@ export interface Aviso {
   contacto: string | null;
   estado: AvisoEstado;
   resuelto: boolean;
+  resueltoAt: string | null;
   createdAt: string;
 }
 
