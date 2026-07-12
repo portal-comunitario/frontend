@@ -55,6 +55,7 @@ interface Celda {
     </p>
   }
 
+  <div class="cal-scroll">
   <div class="cal-grid">
     @for (d of diasSemana; track d) { <div class="cal-dow">{{ d }}</div> }
     @for (celda of celdas(); track celda.fecha.getTime()) {
@@ -75,6 +76,7 @@ interface Celda {
         }
       </div>
     }
+  </div>
   </div>
 </div>
   `,
@@ -98,12 +100,10 @@ interface Celda {
     .cal-reunion.clickable { cursor: pointer; }
     .cal-reunion.cancelada { background: #f1f5f9; color: #94a3b8; text-decoration: line-through; }
     .cal-hora { font-weight: 700; }
+    .cal-scroll { width: 100%; }
     @media (max-width: 760px) {
-      .cal-celda { min-height: 62px; padding: 3px; }
-      .cal-dow { font-size: 0.58rem; padding: 4px 0; }
-      .cal-num { font-size: 0.68rem; }
-      .cal-item { font-size: 0.58rem; padding: 1px 3px; }
-      .dot-reunion { margin-left: 4px; }
+      .cal-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .cal-grid { min-width: 600px; }
     }
   `],
 })

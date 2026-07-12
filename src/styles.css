@@ -195,5 +195,6 @@ textarea { resize: vertical; }
   /* Mapa: apilar mapa arriba y lista abajo (en vez de lado a lado) */
   .mapa-layout { flex-direction: column; height: auto; border-radius: 0; }
   .mapa-left { height: 55vh; min-height: 300px; }
+  .map-full { height: 55vh; min-height: 300px; }   /* altura explícita: no depender de height:100% del padre */
   .mapa-sidebar { width: 100%; min-width: 0; border-left: none; border-top: 1px solid #e5e7eb; max-height: 48vh; }
 }
