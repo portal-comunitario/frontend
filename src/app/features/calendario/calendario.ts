@@ -98,6 +98,13 @@ interface Celda {
     .cal-reunion.clickable { cursor: pointer; }
     .cal-reunion.cancelada { background: #f1f5f9; color: #94a3b8; text-decoration: line-through; }
     .cal-hora { font-weight: 700; }
+    @media (max-width: 760px) {
+      .cal-celda { min-height: 62px; padding: 3px; }
+      .cal-dow { font-size: 0.58rem; padding: 4px 0; }
+      .cal-num { font-size: 0.68rem; }
+      .cal-item { font-size: 0.58rem; padding: 1px 3px; }
+      .dot-reunion { margin-left: 4px; }
+    }
   `],
 })
 export class Calendario implements OnInit {

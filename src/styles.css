@@ -156,3 +156,44 @@ textarea { resize: vertical; }
 .nav-tab-perfil { margin-left: auto; }
 
 .tag-agrupacion { display:inline-block; background:#ccfbf1; color:#0f766e; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:999px; margin-bottom:6px; }
+
+/* ---------- Responsive / móvil ---------- */
+@media (max-width: 760px) {
+  /* Navegación: tira horizontal desplazable en vez de desbordarse */
+  .site-nav-inner {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .site-nav-inner::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 0 0.95rem;
+    height: 44px;
+    font-size: 0.74rem;
+  }
+  .nav-tab-perfil { margin-left: 0; }
+
+  /* Cabecera compacta */
+  .site-header { padding: 0 1rem; }
+  .site-header-inner { height: 58px; }
+  .logo-icon { font-size: 1.7rem; }
+  .logo-title { font-size: 0.95rem; }
+  .logo-sub { display: none; }
+  .user-name-header { display: none; }
+
+  /* Contenedores y encabezados de página */
+  .content-area { padding: 1.1rem 1rem; }
+  .hero { padding: 1.75rem 1.1rem; }
+  .hero h1 { font-size: 1.5rem; }
+
+  /* Pie de página en columna */
+  .site-footer { padding: 1rem; }
+  .site-footer-inner { flex-direction: column; gap: 4px; text-align: center; }
+
+  /* Mapa: apilar mapa arriba y lista abajo (en vez de lado a lado) */
+  .mapa-layout { flex-direction: column; height: auto; border-radius: 0; }
+  .mapa-left { height: 55vh; min-height: 300px; }
+  .mapa-sidebar { width: 100%; min-width: 0; border-left: none; border-top: 1px solid #e5e7eb; max-height: 48vh; }
+}
