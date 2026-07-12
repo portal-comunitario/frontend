@@ -1,5 +1,5 @@
 import {
-  AfterViewInit, Component, ElementRef, EventEmitter, Input, Output, ViewChild, inject,
+  AfterViewInit, Component, ElementRef, EventEmitter, Input, NgZone, Output, ViewChild, inject,
 } from '@angular/core';
 
 import { MapsLoader } from '../../core/maps-loader';
@@ -39,10 +39,11 @@ export class MapPicker implements AfterViewInit {
 
   @Input() lat: number | null = null;
   @Input() lng: number | null = null;
-  @Output() picked = new EventEmitter<{ lat: number | null; lng: number | null }>();
+  @Output() picked = new EventEmitter<{ lat: number | null; lng: number | null; direccion?: string | null }>();
 
   private readonly loader = inject(MapsLoader);
   private readonly tenant = inject(TenantService);
+  private readonly zone = inject(NgZone);
   private get sede() {
     const t = this.tenant.sede();
     if (t) {
@@ -78,7 +79,7 @@ export class MapPicker implements AfterViewInit {
       });
     }
     this.map.addListener('click', (e: any) => {
-      this.setMarker(e.latLng.lat(), e.latLng.lng());
+      this.setMarker(e.latLng.lat(), e.latLng.lng(), true);
     });
     const relayout = () => { if (this.map) { google.maps.event.trigger(this.map, 'resize'); this.map.setCenter(this.marker ? this.marker.getPosition() : center); } };
     setTimeout(relayout, 250);
@@ -102,15 +103,23 @@ export class MapPicker implements AfterViewInit {
     });
   }
 
-  private setMarker(lat: number, lng: number): void {
+  private setMarker(lat: number, lng: number, emitirDireccion = false): void {
     this.lat = lat; this.lng = lng;
     if (this.marker) {
       this.marker.setPosition({ lat, lng });
     } else {
       this.marker = new google.maps.Marker({ position: { lat, lng }, map: this.map, draggable: true });
-      this.marker.addListener('dragend', (e: any) => this.setMarker(e.latLng.lat(), e.latLng.lng()));
+      this.marker.addListener('dragend', (e: any) => this.setMarker(e.latLng.lat(), e.latLng.lng(), true));
     }
-    this.picked.emit({ lat, lng });
+    if (emitirDireccion && this.geocoder) {
+      // Geocodificación inversa: coordenadas del pin → dirección legible (para llenar "Ubicación").
+      this.geocoder.geocode({ location: { lat, lng } }, (r: any, s: string) => {
+        const direccion = s === 'OK' && r?.[0] ? r[0].formatted_address : null;
+        this.zone.run(() => this.picked.emit({ lat, lng, direccion }));
+      });
+    } else {
+      this.zone.run(() => this.picked.emit({ lat, lng }));
+    }
   }
 
   limpiar(): void {

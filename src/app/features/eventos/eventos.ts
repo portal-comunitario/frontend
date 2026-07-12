@@ -297,9 +297,13 @@ export class Eventos implements OnInit {
     });
   }
 
-  onPicked(p: { lat: number | null; lng: number | null }): void {
+  onPicked(p: { lat: number | null; lng: number | null; direccion?: string | null }): void {
     this.form.latitud = p.lat;
     this.form.longitud = p.lng;
+    // Al fijar el pin en el mapa, autocompletar "Ubicación" con la dirección obtenida.
+    if (p.direccion) {
+      this.form.ubicacion = p.direccion;
+    }
   }
 
   buscarEnMapa(): void {
