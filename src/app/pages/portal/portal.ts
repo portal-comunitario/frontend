@@ -18,7 +18,7 @@ import { environment } from '../../../environments/environment';
   <header class="site-header">
     <div class="site-header-inner">
       <div class="site-logo">
-        <span class="logo-icon">🏘️</span>
+        <img class="logo-icon" src="logo.png" alt="Portal Comunitario" />
         <div>
           <div class="logo-title">{{ tenant.nombre() ?? communityName }}</div>
           <div class="logo-sub">Portal Comunitario</div>

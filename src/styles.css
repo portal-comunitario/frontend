@@ -9,7 +9,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f4f6f9; colo
 .site-header { background: #fff; border-bottom: 1px solid #dde3ec; padding: 0 2rem; }
 .site-header-inner { max-width: 1200px; margin: 0 auto; height: 70px; display: flex; align-items: center; justify-content: space-between; }
 .site-logo { display: flex; align-items: center; gap: 0.75rem; }
-.logo-icon { font-size: 2.2rem; }
+.logo-icon { height: 46px; width: auto; display: block; }
 .logo-title { font-size: 1.1rem; font-weight: 800; color: #003087; line-height: 1.2; }
 .logo-sub { font-size: 0.7rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.08em; }
 .header-user { display: flex; align-items: center; gap: 0.6rem; }
@@ -178,7 +178,7 @@ textarea { resize: vertical; }
   /* Cabecera compacta */
   .site-header { padding: 0 1rem; }
   .site-header-inner { height: 58px; }
-  .logo-icon { font-size: 1.7rem; }
+  .logo-icon { height: 34px; width: auto; }
   .logo-title { font-size: 0.95rem; }
   .logo-sub { display: none; }
   .user-name-header { display: none; }
